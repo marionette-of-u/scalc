@@ -1,0 +1,59 @@
+<token_desc> token{
+  <right>{
+    unary_minus;
+    double_slash<bin_op*>;
+    hat<bin_op*>;
+  }
+  <left>{
+    asterisk<bin_op*>, slash<bin_op*>;
+    plus<bin_op*>, minus<bin_op*>;
+  }
+  left_paren, right_paren;
+  <left>{
+    right_arrow;
+    equal;
+    comma;
+  }
+  identifier<expr*>, symbol<symbol*>, keyword_where, keyword_let;
+}
+
+<grammar> grammar{
+  Statement<statement*>
+    : [make_statement] Expr(0) WhereEquality(1)
+    | [make_define_symbol] keyword_let symbol(0) equal Expr(1)
+    ;
+
+  WhereEquality<equality_sequence*>
+    : [identity] keyword_where EqualitySequence(0)
+    | []
+    ;
+
+  EqualitySequence<equality_sequence*>
+    : [make_equality_sequence] Equality(0)
+    | [make_equality_sequence] EqualitySequence(0) comma Equality(1)
+    ;
+
+  Equality<equality*>
+    : [make_equality] symbol(0) equal Expr(1)
+    ;
+
+  Expr<expr*>
+    : [make_lambda] Sequence(0) right_arrow Expr(1)
+    | [call_func] Sequence(0)
+    | [make_expr] Expr(1) plus(0) Expr(2)
+    | [make_expr] Expr(1) minus(0) Expr(2)
+    | [make_expr] Expr(1) asterisk(0) Expr(2)
+    | [make_expr] Expr(1) slash(0) Expr(2)
+    | [make_expr] Expr(1) hat(0) Expr(2)
+    | [make_expr] Expr(1) double_slash(0) Expr(2)
+    | [make_expr] left_paren Expr(0) right_paren
+    | [make_expr] identifier(0)
+    | [make_negate_expr] <unary_minus> minus Expr(0)
+    ;
+
+  Sequence<sequence*>
+    : [make_seq] symbol(0)
+    | [make_seq] Sequence(0) Expr(1)
+    ;
+}
+

@@ -11,6 +11,7 @@ namespace lexer{
 
 enum token{
     token_whitespace,
+    token_right_arrow,
     token_double_slash,
     token_hat,
     token_asterisk,
@@ -19,13 +20,12 @@ enum token{
     token_minus,
     token_left_paren,
     token_right_paren,
-    token_right_arrow,
     token_equal,
     token_comma,
     token_identifier,
-    token_symbol,
     token_keyword_where,
-    token_keyword_let
+    token_keyword_let,
+    token_symbol
 };
 
 class lexer{
@@ -34,7 +34,18 @@ public:
     static std::pair<bool, InputIter> reg_whitespace(InputIter first, InputIter last){
         InputIter iter = first;
         bool match = true;
-        {
+        do{
+            if(iter == last){ match = false; }else{
+                InputIter iter_prime = iter;
+                do{
+                    if(iter != last && *iter == ' '){
+                        ++iter;
+                        match = true;
+                    }else{ match = false; }
+                    if(!match){ iter = iter_prime; break; }
+                }while(false);
+            }
+            if(!match){ break; }
             InputIter iter_prime = iter;
             while(iter != last){
                 if(iter == last){ match = false; }else{
@@ -53,6 +64,28 @@ public:
                     break;
                 }
             }
+        }while(false);
+        return std::make_pair(match, iter);
+    }
+
+    template<class InputIter>
+    static std::pair<bool, InputIter> reg_right_arrow(InputIter first, InputIter last){
+        InputIter iter = first;
+        bool match = true;
+        if(iter == last){ match = false; }else{
+            InputIter iter_prime = iter;
+            do{
+                if(iter != last && *iter == '-'){
+                    ++iter;
+                    match = true;
+                }else{ match = false; }
+                if(!match){ iter = iter_prime; break; }
+                if(iter != last && *iter == '>'){
+                    ++iter;
+                    match = true;
+                }else{ match = false; }
+                if(!match){ iter = iter_prime; break; }
+            }while(false);
         }
         return std::make_pair(match, iter);
     }
@@ -199,28 +232,6 @@ public:
     }
 
     template<class InputIter>
-    static std::pair<bool, InputIter> reg_right_arrow(InputIter first, InputIter last){
-        InputIter iter = first;
-        bool match = true;
-        if(iter == last){ match = false; }else{
-            InputIter iter_prime = iter;
-            do{
-                if(iter != last && *iter == '-'){
-                    ++iter;
-                    match = true;
-                }else{ match = false; }
-                if(!match){ iter = iter_prime; break; }
-                if(iter != last && *iter == '>'){
-                    ++iter;
-                    match = true;
-                }else{ match = false; }
-                if(!match){ iter = iter_prime; break; }
-            }while(false);
-        }
-        return std::make_pair(match, iter);
-    }
-
-    template<class InputIter>
     static std::pair<bool, InputIter> reg_equal(InputIter first, InputIter last){
         InputIter iter = first;
         bool match = true;
@@ -308,51 +319,6 @@ public:
     }
 
     template<class InputIter>
-    static std::pair<bool, InputIter> reg_symbol(InputIter first, InputIter last){
-        InputIter iter = first;
-        bool match = true;
-        if(iter == last){ match = false; }else{
-            InputIter iter_prime = iter;
-            do{
-                if(iter == last){ match = false; }else{
-                    char c = *iter;
-                    if(
-                        ((c >= 'a') && (c <= 'z')) ||
-                        ((c >= 'A') && (c <= 'Z'))
-                    ){
-                        ++iter;
-                        match = true;
-                    }else{ match = false; }
-                }
-                if(!match){ iter = iter_prime; break; }
-                {
-                    InputIter iter_prime = iter;
-                    while(iter != last){
-                        if(iter == last){ match = false; }else{
-                            char c = *iter;
-                            if(
-                                ((c >= 'a') && (c <= 'z')) ||
-                                ((c >= 'A') && (c <= 'Z')) ||
-                                ((c >= '0') && (c <= '9'))
-                            ){
-                                ++iter;
-                                match = true;
-                            }else{ match = false; }
-                        }
-                        if(match){ iter_prime = iter; }else{
-                            iter = iter_prime;
-                            match = true;
-                            break;
-                        }
-                    }
-                }
-                if(!match){ iter = iter_prime; break; }
-            }while(false);
-        }
-        return std::make_pair(match, iter);
-    }
-
-    template<class InputIter>
     static std::pair<bool, InputIter> reg_keyword_where(InputIter first, InputIter last){
         InputIter iter = first;
         bool match = true;
@@ -416,6 +382,53 @@ public:
         return std::make_pair(match, iter);
     }
 
+    template<class InputIter>
+    static std::pair<bool, InputIter> reg_symbol(InputIter first, InputIter last){
+        InputIter iter = first;
+        bool match = true;
+        if(iter == last){ match = false; }else{
+            InputIter iter_prime = iter;
+            do{
+                if(iter == last){ match = false; }else{
+                    char c = *iter;
+                    if(
+                        ((c >= 'a') && (c <= 'z')) ||
+                        ((c >= 'A') && (c <= 'Z')) ||
+                        (c == '_')
+                    ){
+                        ++iter;
+                        match = true;
+                    }else{ match = false; }
+                }
+                if(!match){ iter = iter_prime; break; }
+                {
+                    InputIter iter_prime = iter;
+                    while(iter != last){
+                        if(iter == last){ match = false; }else{
+                            char c = *iter;
+                            if(
+                                ((c >= 'a') && (c <= 'z')) ||
+                                ((c >= 'A') && (c <= 'Z')) ||
+                                ((c >= '0') && (c <= '9')) ||
+                                (c == '_')
+                            ){
+                                ++iter;
+                                match = true;
+                            }else{ match = false; }
+                        }
+                        if(match){ iter_prime = iter; }else{
+                            iter = iter_prime;
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                if(!match){ iter = iter_prime; break; }
+            }while(false);
+        }
+        return std::make_pair(match, iter);
+    }
+
     template<class InputIter, class InsertIter>
     static std::pair<bool, InputIter> tokenize(InputIter first, InputIter last, InsertIter token_inserter){
         InputIter iter = first;
@@ -423,6 +436,12 @@ public:
         while(iter != last){
             result = reg_whitespace(iter, last);
             if(result.first){
+                iter = result.second;
+                continue;
+            }
+            result = reg_right_arrow(iter, last);
+            if(result.first){
+                *token_inserter = std::make_pair(token_right_arrow, std::make_pair(iter, result.second));
                 iter = result.second;
                 continue;
             }
@@ -474,12 +493,6 @@ public:
                 iter = result.second;
                 continue;
             }
-            result = reg_right_arrow(iter, last);
-            if(result.first){
-                *token_inserter = std::make_pair(token_right_arrow, std::make_pair(iter, result.second));
-                iter = result.second;
-                continue;
-            }
             result = reg_equal(iter, last);
             if(result.first){
                 *token_inserter = std::make_pair(token_equal, std::make_pair(iter, result.second));
@@ -498,12 +511,6 @@ public:
                 iter = result.second;
                 continue;
             }
-            result = reg_symbol(iter, last);
-            if(result.first){
-                *token_inserter = std::make_pair(token_symbol, std::make_pair(iter, result.second));
-                iter = result.second;
-                continue;
-            }
             result = reg_keyword_where(iter, last);
             if(result.first){
                 *token_inserter = std::make_pair(token_keyword_where, std::make_pair(iter, result.second));
@@ -513,6 +520,12 @@ public:
             result = reg_keyword_let(iter, last);
             if(result.first){
                 *token_inserter = std::make_pair(token_keyword_let, std::make_pair(iter, result.second));
+                iter = result.second;
+                continue;
+            }
+            result = reg_symbol(iter, last);
+            if(result.first){
+                *token_inserter = std::make_pair(token_symbol, std::make_pair(iter, result.second));
                 iter = result.second;
                 continue;
             }

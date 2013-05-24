@@ -6,7 +6,7 @@
 #include <vector>
 #include "lexer.hpp"
 
-namespace grammar{
+namespace parser{
 
 enum token{
     token_unary_minus,
@@ -206,10 +206,10 @@ private:
         stack_.commit_tmp();
     }
 
-    bool call_0_call_func(int nonterminal_index, int base, int arg_index0)
+    bool call_0_make_call(int nonterminal_index, int base, int arg_index0)
     {
         sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.call_func(arg0);
+        expr* r = sa_.make_call(arg0);
         value_type v; sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -299,31 +299,40 @@ private:
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_make_expr(int nonterminal_index, int base, int arg_index0, int arg_index1, int arg_index2)
+    bool call_0_make_binary_op(int nonterminal_index, int base, int arg_index0, int arg_index1, int arg_index2)
     {
         bin_op* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         expr* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
-        expr* r = sa_.make_expr(arg0, arg1, arg2);
+        expr* r = sa_.make_binary_op(arg0, arg1, arg2);
         value_type v; sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_make_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    bool call_0_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        statement* r = sa_.make_define_symbol(arg0, arg1);
+        statement* r = sa_.define_symbol(arg0, arg1);
         value_type v; sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_1_make_expr(int nonterminal_index, int base, int arg_index0)
+    bool call_0_make_identifier(int nonterminal_index, int base, int arg_index0)
+    {
+        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        expr* r = sa_.make_identifier(arg0);
+        value_type v; sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_1_identity(int nonterminal_index, int base, int arg_index0)
     {
         expr* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.make_expr(arg0);
+        expr* r = sa_.identity(arg0);
         value_type v; sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -417,7 +426,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_call_func(2, 1, 0);
+            return call_0_make_call(2, 1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1238,7 +1247,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1275,7 +1284,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1312,7 +1321,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1349,7 +1358,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1392,7 +1401,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1435,7 +1444,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_expr(2, 3, 1, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1477,7 +1486,7 @@ private:
             push_stack(&parser::state_11, &parser::gotof_11, value);
             return false;
         case token_0:
-            return call_0_make_define_symbol(0, 4, 1, 3);
+            return call_0_define_symbol(0, 4, 1, 3);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1508,7 +1517,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_1_make_expr(2, 1, 0);
+            return call_0_make_identifier(2, 1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1539,7 +1548,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_1_make_expr(2, 3, 1);
+            return call_1_identity(2, 3, 1);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1629,6 +1638,6 @@ private:
 
 };
 
-} // namespace grammar
+} // namespace parser
 
 #endif // PARSER_HPP_

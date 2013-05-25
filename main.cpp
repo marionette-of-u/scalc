@@ -5,22 +5,24 @@
 #include <memory>
 #include <vector>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <cstring>
+#include "common.hpp"
 #include "parser.hpp"
 
-// ‰ğÍ‘ÎÛ‚Ì•¶š—ñ‚ª“ü‚évector
+// è§£æå¯¾è±¡ã®æ–‡å­—åˆ—ãŒå…¥ã‚‹vector.
 typedef std::vector<char> statement_str;
 
 // ---- lex data.
 namespace lex_data{
-    // š‹å‰ğÍŒ‹‰Ê‚Ìrange
+    // å­—å¥è§£æçµæœã®range
     typedef std::pair<statement_str::const_iterator, statement_str::const_iterator> token_range;
 
-    // š‹å‰ğÍŒ‹‰Ê‚Ìtokení•Ê‚Æ”ÍˆÍ
+    // å­—å¥è§£æçµæœã®tokenç¨®åˆ¥ã¨ç¯„å›²
     typedef std::pair<lexer::token, token_range> lex_result;
 
-    // š‹å‰ğÍŒ‹‰Ê
+    // å­—å¥è§£æçµæœ
     typedef std::vector<lex_result> token_sequence;
 }
 
@@ -30,47 +32,47 @@ namespace lex_data{
 struct eval_target{
     virtual ~eval_target(){}
 
-    virtual std::string ast_str() const{
-        return "eval_target";
-    }
+    virtual std::string ast_str() const = 0;
 };
 
 struct value : eval_target{
     virtual std::string ast_str() const{
-        return "value";
-    }
-};
-
-struct binary_operator{
-    std::string symbol;
-    std::function<value(const eval_target*, const eval_target*)> op_fn;
-};
-
-struct expr : eval_target{
-    virtual std::string ast_str() const{
-        std::string str;
-        str += "(";
-        str += op->symbol + " " + lhs->ast_str() + rhs->ast_str();
-        str += ")";
-        return str;
+        std::stringstream ss;
+        ss << v;
+        return ss.str();
     }
 
-    std::unique_ptr<binary_operator> op;
-    std::unique_ptr<eval_target> lhs, rhs;
+    fpoint v;
 };
 
 struct symbol : eval_target{
     virtual std::string ast_str() const{
-        return "symbol";
+        return s;
     }
+
+    std::string s;
+};
+
+struct binary_operator : eval_target{
+    virtual std::string ast_str() const{
+        std::string str;
+        str += "(";
+        str += op_s + " " + lhs->ast_str() + rhs->ast_str();
+        str += ")";
+        return str;
+    }
+
+    std::string op_s;
+    std::function<value(const eval_target*, const eval_target*)> op_fn;
+    std::unique_ptr<eval_target> lhs, rhs;
 };
 
 struct sequence{
-    // •]‰¿‘ÎÛ‚Ì®
-    // ‚à‚µ‚±‚Ìsequence‚ªæ“ª‚É‚ ‚ê‚Î, e‚Í•K‚¸‹L†
+    // è©•ä¾¡å¯¾è±¡ã®å¼
+    // ã‚‚ã—ã“ã®sequenceãŒå…ˆé ­ã«ã‚ã‚Œã°, eã¯å¿…ãšè¨˜å·ã‚’æŒ‡ã™
     std::unique_ptr<eval_target> e;
 
-    // ƒŠƒ“ƒNƒŠƒXƒg Ÿ‚Ì•]‰¿‘ÎÛ‚Ì®
+    // ãƒªãƒ³ã‚¯ãƒªã‚¹ãƒˆ æ¬¡ã®è©•ä¾¡å¯¾è±¡ã®å¼
     std::unique_ptr<sequence> next;
 };
 
@@ -84,10 +86,10 @@ struct lambda : eval_target{
         str += " -> " + e->ast_str() + ")";
     }
 
-    // lambda®‚Ìˆø”
+    // lambdaå¼ã®å¼•æ•°
     std::unique_ptr<sequence> args;
 
-    // lambda®‚Ì–{‘Ì
+    // lambdaå¼ã®æœ¬ä½“
     std::unique_ptr<eval_target> e;
 };
 
@@ -101,32 +103,32 @@ struct call : eval_target{
         str += ")";
     }
 
-    // ŠÖ”‹y‚ÑŠÖ”‚Ìˆø”
-    // æ“ª‚Í•K‚¸ŠÖ”‚ğw‚·
+    // é–¢æ•°åŠã³é–¢æ•°ã®å¼•æ•°
+    // å…ˆé ­ã¯å¿…ãšé–¢æ•°ã‚’æŒ‡ã™
     std::unique_ptr<sequence> fn_and_args;
 };
 
 struct equality{
-    // ¶•Ó ‹L†
+    // å·¦è¾º è¨˜å·
     std::unique_ptr<symbol> s;
 
-    // ‰E•Ó ®
-    std::unique_ptr<expr> e;
+    // å³è¾º å¼
+    std::unique_ptr<eval_target> e;
 };
 
 struct equality_sequence{
-    // “™®
+    // ç­‰å¼
     std::unique_ptr<equality> e;
 
-    // ƒŠƒ“ƒNƒŠƒXƒg Ÿ‚Ì“™®
+    // ãƒªãƒ³ã‚¯ãƒªã‚¹ãƒˆ æ¬¡ã®ç­‰å¼
     std::unique_ptr<equality_sequence> next;
 };
 
 struct statement{
-    // •]‰¿‘ÎÛ‚Ì®
-    std::unique_ptr<expr> e;
+    // è©•ä¾¡å¯¾è±¡ã®å¼
+    std::unique_ptr<eval_target> e;
 
-    // where•”
+    // whereéƒ¨
     std::unique_ptr<equality_sequence> w;
 };
 
@@ -169,14 +171,17 @@ public:
         x = y;
     }
 
-private:
+    template<class T>
+    T *identity(T *subtree){
+        return subtree;
+    }
 };
 
 int main(){
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        "1 + 1"
+        "1 + 1^a"
     };
 
     if(argc != 2){ return 0; }
@@ -187,7 +192,15 @@ int main(){
     for(std::size_t i = 0; i < n; ++i){
         target_str[i] = argv[1][i];
     }
-    lexer::lexer::tokenize(target_str.begin(), target_str.end(), std::insert_iterator<lex_data::token_sequence>(token_sequence, token_sequence.begin()));
+
+    lexer::lexer::tokenize(
+        target_str.begin(),
+        target_str.end(),
+        std::insert_iterator<lex_data::token_sequence>(
+            token_sequence,
+            token_sequence.begin()
+        )
+    );
 
     return 0;
 }

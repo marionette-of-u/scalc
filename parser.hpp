@@ -28,6 +28,7 @@ enum token{
     token_0 = -1
 };
 
+
 template<class T, int StackSize>
 class stack{
 public:
@@ -206,33 +207,9 @@ private:
         stack_.commit_tmp();
     }
 
-    bool call_0_make_call(int nonterminal_index, int base, int arg_index0)
+    bool call_0_0(int nonterminal_index, int base)
     {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.make_call(arg0);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_0_make_seq(int nonterminal_index, int base, int arg_index0)
-    {
-        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        sequence* r = sa_.make_seq(arg0);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_1_make_seq(int nonterminal_index, int base, int arg_index0, int arg_index1)
-    {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        sequence* r = sa_.make_seq(arg0, arg1);
-        value_type v;
-        sa_.upcast(v, r);
+        value_type v = value_type();
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -240,48 +217,28 @@ private:
     bool call_0_make_equality(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         equality* r = sa_.make_equality(arg0, arg1);
-        value_type v;
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_make_equality_sequence(int nonterminal_index, int base, int arg_index0)
-    {
-        equality* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality_sequence* r = sa_.make_equality_sequence(arg0);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_0_identity(int nonterminal_index, int base, int arg_index0)
-    {
-        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality_sequence* r = sa_.identity(arg0);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_1_make_equality_sequence(int nonterminal_index, int base, int arg_index0, int arg_index1)
-    {
-        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        equality_sequence* r = sa_.make_equality_sequence(arg0, arg1);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_0_0(int nonterminal_index, int base)
+    bool call_1_0(int nonterminal_index, int base)
     {
         value_type v = value_type();
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* r = sa_.define_symbol(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -290,18 +247,7 @@ private:
     {
         eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         eval_target* r = sa_.make_negate_expr(arg0);
-        value_type v;
-        sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_0_make_lambda(int nonterminal_index, int base, int arg_index0, int arg_index1)
-    {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        eval_target* r = sa_.make_lambda(arg0, arg1);
-        value_type v;
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -313,18 +259,39 @@ private:
         eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         eval_target* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
         eval_target* r = sa_.make_binary_op(arg0, arg1, arg2);
-        value_type v;
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    bool call_0_make_lambda(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        eval_target* r = sa_.define_symbol(arg0, arg1);
-        value_type v;
+        eval_target* r = sa_.make_lambda(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_seq(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        sequence* r = sa_.make_seq(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_identity(int nonterminal_index, int base, int arg_index0)
+    {
+        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* r = sa_.identity(arg0);
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -332,9 +299,9 @@ private:
 
     bool call_1_identity(int nonterminal_index, int base, int arg_index0)
     {
-        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         eval_target* r = sa_.identity(arg0);
-        value_type v;
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -342,9 +309,40 @@ private:
 
     bool call_2_identity(int nonterminal_index, int base, int arg_index0)
     {
-        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         eval_target* r = sa_.identity(arg0);
-        value_type v;
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_equality_sequence(int nonterminal_index, int base, int arg_index0)
+    {
+        equality* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        equality_sequence* r = sa_.make_equality_sequence(arg0);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_3_identity(int nonterminal_index, int base, int arg_index0)
+    {
+        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        equality_sequence* r = sa_.identity(arg0);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_1_make_equality_sequence(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        equality* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        equality_sequence* r = sa_.make_equality_sequence(arg0, arg1);
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -352,10 +350,10 @@ private:
 
     bool call_0_make_statement(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         equality_sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         eval_target* r = sa_.make_statement(arg0, arg1);
-        value_type v;
+        value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
@@ -365,8 +363,7 @@ private:
     {
         switch(nonterminal_index){
         case 0: return push_stack(&parser::state_38, &parser::gotof_38, v);
-        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_12, &parser::gotof_12, v);
         default: assert(0); return false;
         }
     }
@@ -374,26 +371,23 @@ private:
     bool state_0(token_type token, const value_type& value)
     {
         switch(token){
-        case token_minus:
-            // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
-            return false;
-        case token_left_paren:
-            // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
-            return false;
-        case token_identifier:
-            // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
-            return false;
-        case token_symbol:
-            // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
-            return false;
         case token_keyword_let:
             // shift
             push_stack(&parser::state_35, &parser::gotof_35, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_arrow:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
+        case token_0:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -404,8 +398,8 @@ private:
     bool gotof_1(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_14, &parser::gotof_14, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
         default: assert(0); return false;
         }
     }
@@ -415,31 +409,30 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
+            return false;
+        case token_right_arrow:
+            // shift
+            push_stack(&parser::state_9, &parser::gotof_9, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
         case token_double_slash:
         case token_hat:
         case token_asterisk:
         case token_slash:
         case token_plus:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_call(2, 1, 0);
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -450,8 +443,8 @@ private:
     bool gotof_2(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_18, &parser::gotof_18, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_14, &parser::gotof_14, v);
         default: assert(0); return false;
         }
     }
@@ -461,20 +454,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -485,8 +485,8 @@ private:
     bool gotof_3(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_23, &parser::gotof_23, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_15, &parser::gotof_15, v);
         default: assert(0); return false;
         }
     }
@@ -496,20 +496,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -520,8 +527,8 @@ private:
     bool gotof_4(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_24, &parser::gotof_24, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_16, &parser::gotof_16, v);
         default: assert(0); return false;
         }
     }
@@ -531,20 +538,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -555,8 +569,8 @@ private:
     bool gotof_5(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_25, &parser::gotof_25, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_17, &parser::gotof_17, v);
         default: assert(0); return false;
         }
     }
@@ -566,20 +580,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -590,8 +611,8 @@ private:
     bool gotof_6(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_26, &parser::gotof_26, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_18, &parser::gotof_18, v);
         default: assert(0); return false;
         }
     }
@@ -601,20 +622,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -625,8 +653,8 @@ private:
     bool gotof_7(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_27, &parser::gotof_27, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_19, &parser::gotof_19, v);
         default: assert(0); return false;
         }
     }
@@ -636,20 +664,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -660,8 +695,8 @@ private:
     bool gotof_8(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_28, &parser::gotof_28, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_20, &parser::gotof_20, v);
         default: assert(0); return false;
         }
     }
@@ -671,20 +706,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -695,8 +737,8 @@ private:
     bool gotof_9(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_29, &parser::gotof_29, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_21, &parser::gotof_21, v);
         default: assert(0); return false;
         }
     }
@@ -706,20 +748,27 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -730,8 +779,8 @@ private:
     bool gotof_10(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_30, &parser::gotof_30, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
         default: assert(0); return false;
         }
     }
@@ -741,20 +790,31 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
+            return false;
+        case token_right_paren:
+            // shift
+            push_stack(&parser::state_26, &parser::gotof_26, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -765,8 +825,8 @@ private:
     bool gotof_11(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_31, &parser::gotof_31, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
         default: assert(0); return false;
         }
     }
@@ -776,20 +836,30 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
+        case token_comma:
+        case token_0:
+            return call_0_make_equality(5, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -800,8 +870,9 @@ private:
     bool gotof_12(int nonterminal_index, const value_type& v)
     {
         switch(nonterminal_index){
-        case 2: return push_stack(&parser::state_32, &parser::gotof_32, v);
-        case 5: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
+        case 3: return push_stack(&parser::state_36, &parser::gotof_36, v);
         default: assert(0); return false;
         }
     }
@@ -811,20 +882,33 @@ private:
         switch(token){
         case token_minus:
             // shift
-            push_stack(&parser::state_3, &parser::gotof_3, value);
+            push_stack(&parser::state_2, &parser::gotof_2, value);
             return false;
         case token_left_paren:
             // shift
-            push_stack(&parser::state_4, &parser::gotof_4, value);
+            push_stack(&parser::state_23, &parser::gotof_23, value);
             return false;
         case token_identifier:
             // shift
-            push_stack(&parser::state_33, &parser::gotof_33, value);
+            push_stack(&parser::state_24, &parser::gotof_24, value);
             return false;
         case token_symbol:
             // shift
-            push_stack(&parser::state_13, &parser::gotof_13, value);
+            push_stack(&parser::state_25, &parser::gotof_25, value);
             return false;
+        case token_keyword_where:
+            // shift
+            push_stack(&parser::state_27, &parser::gotof_27, value);
+            return false;
+        case token_0:
+            return call_1_0(3, 0);
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_right_arrow:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -834,28 +918,41 @@ private:
 
     bool gotof_13(int nonterminal_index, const value_type& v)
     {
-        assert(0);
-        return true;
+        switch(nonterminal_index){
+        case 1: return push_stack(&parser::state_1, &parser::gotof_1, v);
+        case 2: return push_stack(&parser::state_22, &parser::gotof_22, v);
+        default: assert(0); return false;
+        }
     }
 
     bool state_13(token_type token, const value_type& value)
     {
         switch(token){
+        case token_minus:
+            // shift
+            push_stack(&parser::state_2, &parser::gotof_2, value);
+            return false;
+        case token_left_paren:
+            // shift
+            push_stack(&parser::state_23, &parser::gotof_23, value);
+            return false;
+        case token_identifier:
+            // shift
+            push_stack(&parser::state_24, &parser::gotof_24, value);
+            return false;
+        case token_symbol:
+            // shift
+            push_stack(&parser::state_25, &parser::gotof_25, value);
+            return false;
         case token_double_slash:
         case token_hat:
         case token_asterisk:
         case token_slash:
         case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
         case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
+            return call_0_0(1, 0);
         case token_0:
-            return call_0_make_seq(5, 1, 0);
+            return call_0_define_symbol(0, 4, 1, 3);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -886,7 +983,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_1_make_seq(5, 2, 0, 1);
+            return call_0_make_negate_expr(2, 2, 1);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -896,20 +993,31 @@ private:
 
     bool gotof_15(int nonterminal_index, const value_type& v)
     {
-        switch(nonterminal_index){
-        case 1: return push_stack(&parser::state_19, &parser::gotof_19, v);
-        case 4: return push_stack(&parser::state_20, &parser::gotof_20, v);
-        default: assert(0); return false;
-        }
+        assert(0);
+        return true;
     }
 
     bool state_15(token_type token, const value_type& value)
     {
         switch(token){
-        case token_symbol:
+        case token_double_slash:
             // shift
-            push_stack(&parser::state_17, &parser::gotof_17, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
+        case token_0:
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -919,19 +1027,34 @@ private:
 
     bool gotof_16(int nonterminal_index, const value_type& v)
     {
-        switch(nonterminal_index){
-        case 1: return push_stack(&parser::state_21, &parser::gotof_21, v);
-        default: assert(0); return false;
-        }
+        assert(0);
+        return true;
     }
 
     bool state_16(token_type token, const value_type& value)
     {
         switch(token){
-        case token_symbol:
+        case token_double_slash:
             // shift
-            push_stack(&parser::state_17, &parser::gotof_17, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
+        case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
+        case token_0:
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -948,10 +1071,27 @@ private:
     bool state_17(token_type token, const value_type& value)
     {
         switch(token){
-        case token_equal:
+        case token_double_slash:
             // shift
-            push_stack(&parser::state_2, &parser::gotof_2, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
+        case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
+        case token_0:
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -970,31 +1110,25 @@ private:
         switch(token){
         case token_double_slash:
             // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
         case token_hat:
             // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
+            push_stack(&parser::state_4, &parser::gotof_4, value);
             return false;
         case token_asterisk:
-            // shift
-            push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
         case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
         case token_plus:
-            // shift
-            push_stack(&parser::state_10, &parser::gotof_10, value);
-            return false;
         case token_minus:
-            // shift
-            push_stack(&parser::state_11, &parser::gotof_11, value);
-            return false;
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
         case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
         case token_0:
-            return call_0_make_equality(1, 3, 0, 2);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1011,9 +1145,33 @@ private:
     bool state_19(token_type token, const value_type& value)
     {
         switch(token){
+        case token_double_slash:
+            // shift
+            push_stack(&parser::state_3, &parser::gotof_3, value);
+            return false;
+        case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
+        case token_asterisk:
+            // shift
+            push_stack(&parser::state_5, &parser::gotof_5, value);
+            return false;
+        case token_slash:
+            // shift
+            push_stack(&parser::state_6, &parser::gotof_6, value);
+            return false;
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
         case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
         case token_0:
-            return call_0_make_equality_sequence(4, 1, 0);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1030,12 +1188,33 @@ private:
     bool state_20(token_type token, const value_type& value)
     {
         switch(token){
-        case token_comma:
+        case token_double_slash:
             // shift
-            push_stack(&parser::state_16, &parser::gotof_16, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
+        case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
+        case token_asterisk:
+            // shift
+            push_stack(&parser::state_5, &parser::gotof_5, value);
+            return false;
+        case token_slash:
+            // shift
+            push_stack(&parser::state_6, &parser::gotof_6, value);
+            return false;
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
         case token_0:
-            return call_0_identity(3, 2, 1);
+            return call_0_make_binary_op(2, 3, 1, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1052,171 +1231,29 @@ private:
     bool state_21(token_type token, const value_type& value)
     {
         switch(token){
-        case token_comma:
-        case token_0:
-            return call_1_make_equality_sequence(4, 3, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_22(int nonterminal_index, const value_type& v)
-    {
-        switch(nonterminal_index){
-        case 3: return push_stack(&parser::state_36, &parser::gotof_36, v);
-        default: assert(0); return false;
-        }
-    }
-
-    bool state_22(token_type token, const value_type& value)
-    {
-        switch(token){
         case token_double_slash:
+            // shift
+            push_stack(&parser::state_3, &parser::gotof_3, value);
+            return false;
+        case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
+        case token_asterisk:
+            // shift
+            push_stack(&parser::state_5, &parser::gotof_5, value);
+            return false;
+        case token_slash:
             // shift
             push_stack(&parser::state_6, &parser::gotof_6, value);
             return false;
-        case token_hat:
+        case token_plus:
             // shift
             push_stack(&parser::state_7, &parser::gotof_7, value);
             return false;
-        case token_asterisk:
+        case token_minus:
             // shift
             push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
-        case token_plus:
-            // shift
-            push_stack(&parser::state_10, &parser::gotof_10, value);
-            return false;
-        case token_minus:
-            // shift
-            push_stack(&parser::state_11, &parser::gotof_11, value);
-            return false;
-        case token_keyword_where:
-            // shift
-            push_stack(&parser::state_15, &parser::gotof_15, value);
-            return false;
-        case token_0:
-            return call_0_0(3, 0);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_23(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_23(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-        case token_hat:
-        case token_asterisk:
-        case token_slash:
-        case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_negate_expr(2, 2, 1);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_24(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_24(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-            // shift
-            push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
-        case token_plus:
-            // shift
-            push_stack(&parser::state_10, &parser::gotof_10, value);
-            return false;
-        case token_minus:
-            // shift
-            push_stack(&parser::state_11, &parser::gotof_11, value);
-            return false;
-        case token_right_paren:
-            // shift
-            push_stack(&parser::state_34, &parser::gotof_34, value);
-            return false;
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_25(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_25(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-            // shift
-            push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
-        case token_plus:
-            // shift
-            push_stack(&parser::state_10, &parser::gotof_10, value);
-            return false;
-        case token_minus:
-            // shift
-            push_stack(&parser::state_11, &parser::gotof_11, value);
             return false;
         case token_left_paren:
         case token_right_paren:
@@ -1234,176 +1271,98 @@ private:
         }
     }
 
-    bool gotof_26(int nonterminal_index, const value_type& v)
+    bool gotof_22(int nonterminal_index, const value_type& v)
     {
         assert(0);
         return true;
     }
 
-    bool state_26(token_type token, const value_type& value)
+    bool state_22(token_type token, const value_type& value)
     {
         switch(token){
         case token_double_slash:
             // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
+            push_stack(&parser::state_3, &parser::gotof_3, value);
             return false;
         case token_hat:
+            // shift
+            push_stack(&parser::state_4, &parser::gotof_4, value);
+            return false;
         case token_asterisk:
-        case token_slash:
-        case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
+            // shift
+            push_stack(&parser::state_5, &parser::gotof_5, value);
             return false;
-        }
-    }
-
-    bool gotof_27(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_27(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
+        case token_slash:
             // shift
             push_stack(&parser::state_6, &parser::gotof_6, value);
             return false;
-        case token_hat:
+        case token_plus:
             // shift
             push_stack(&parser::state_7, &parser::gotof_7, value);
             return false;
-        case token_asterisk:
-        case token_slash:
-        case token_plus:
         case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_28(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_28(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-        case token_slash:
-        case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_29(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_29(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-        case token_slash:
-        case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_30(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_30(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
             // shift
             push_stack(&parser::state_8, &parser::gotof_8, value);
             return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_keyword_where:
+        case token_0:
+            return call_0_make_seq(1, 2, 0, 1);
+        default:
+            sa_.syntax_error();
+            error_ = true;
             return false;
+        }
+    }
+
+    bool gotof_23(int nonterminal_index, const value_type& v)
+    {
+        switch(nonterminal_index){
+        case 1: return push_stack(&parser::state_10, &parser::gotof_10, v);
+        default: assert(0); return false;
+        }
+    }
+
+    bool state_23(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_paren:
+        case token_right_arrow:
+        case token_identifier:
+        case token_symbol:
+            return call_0_0(1, 0);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_24(int nonterminal_index, const value_type& v)
+    {
+        assert(0);
+        return true;
+    }
+
+    bool state_24(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
         case token_plus:
         case token_minus:
         case token_left_paren:
@@ -1414,7 +1373,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_identity(2, 1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1422,98 +1381,13 @@ private:
         }
     }
 
-    bool gotof_31(int nonterminal_index, const value_type& v)
+    bool gotof_25(int nonterminal_index, const value_type& v)
     {
         assert(0);
         return true;
     }
 
-    bool state_31(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-            // shift
-            push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
-        case token_plus:
-        case token_minus:
-        case token_left_paren:
-        case token_right_paren:
-        case token_right_arrow:
-        case token_comma:
-        case token_identifier:
-        case token_symbol:
-        case token_keyword_where:
-        case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_32(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_32(token_type token, const value_type& value)
-    {
-        switch(token){
-        case token_double_slash:
-            // shift
-            push_stack(&parser::state_6, &parser::gotof_6, value);
-            return false;
-        case token_hat:
-            // shift
-            push_stack(&parser::state_7, &parser::gotof_7, value);
-            return false;
-        case token_asterisk:
-            // shift
-            push_stack(&parser::state_8, &parser::gotof_8, value);
-            return false;
-        case token_slash:
-            // shift
-            push_stack(&parser::state_9, &parser::gotof_9, value);
-            return false;
-        case token_plus:
-            // shift
-            push_stack(&parser::state_10, &parser::gotof_10, value);
-            return false;
-        case token_minus:
-            // shift
-            push_stack(&parser::state_11, &parser::gotof_11, value);
-            return false;
-        case token_0:
-            return call_0_define_symbol(0, 4, 1, 3);
-        default:
-            sa_.syntax_error();
-            error_ = true;
-            return false;
-        }
-    }
-
-    bool gotof_33(int nonterminal_index, const value_type& v)
-    {
-        assert(0);
-        return true;
-    }
-
-    bool state_33(token_type token, const value_type& value)
+    bool state_25(token_type token, const value_type& value)
     {
         switch(token){
         case token_double_slash:
@@ -1538,13 +1412,13 @@ private:
         }
     }
 
-    bool gotof_34(int nonterminal_index, const value_type& v)
+    bool gotof_26(int nonterminal_index, const value_type& v)
     {
         assert(0);
         return true;
     }
 
-    bool state_34(token_type token, const value_type& value)
+    bool state_26(token_type token, const value_type& value)
     {
         switch(token){
         case token_double_slash:
@@ -1562,6 +1436,192 @@ private:
         case token_keyword_where:
         case token_0:
             return call_2_identity(2, 3, 1);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_27(int nonterminal_index, const value_type& v)
+    {
+        switch(nonterminal_index){
+        case 4: return push_stack(&parser::state_32, &parser::gotof_32, v);
+        case 5: return push_stack(&parser::state_31, &parser::gotof_31, v);
+        default: assert(0); return false;
+        }
+    }
+
+    bool state_27(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_symbol:
+            // shift
+            push_stack(&parser::state_29, &parser::gotof_29, value);
+            return false;
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_28(int nonterminal_index, const value_type& v)
+    {
+        switch(nonterminal_index){
+        case 5: return push_stack(&parser::state_33, &parser::gotof_33, v);
+        default: assert(0); return false;
+        }
+    }
+
+    bool state_28(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_symbol:
+            // shift
+            push_stack(&parser::state_29, &parser::gotof_29, value);
+            return false;
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_29(int nonterminal_index, const value_type& v)
+    {
+        assert(0);
+        return true;
+    }
+
+    bool state_29(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_equal:
+            // shift
+            push_stack(&parser::state_30, &parser::gotof_30, value);
+            return false;
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_30(int nonterminal_index, const value_type& v)
+    {
+        switch(nonterminal_index){
+        case 1: return push_stack(&parser::state_11, &parser::gotof_11, v);
+        default: assert(0); return false;
+        }
+    }
+
+    bool state_30(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_arrow:
+        case token_comma:
+        case token_identifier:
+        case token_symbol:
+        case token_0:
+            return call_0_0(1, 0);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_31(int nonterminal_index, const value_type& v)
+    {
+        assert(0);
+        return true;
+    }
+
+    bool state_31(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_comma:
+        case token_0:
+            return call_0_make_equality_sequence(4, 1, 0);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_32(int nonterminal_index, const value_type& v)
+    {
+        assert(0);
+        return true;
+    }
+
+    bool state_32(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_comma:
+            // shift
+            push_stack(&parser::state_28, &parser::gotof_28, value);
+            return false;
+        case token_0:
+            return call_3_identity(3, 2, 1);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_33(int nonterminal_index, const value_type& v)
+    {
+        assert(0);
+        return true;
+    }
+
+    bool state_33(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_comma:
+        case token_0:
+            return call_1_make_equality_sequence(4, 3, 0, 2);
+        default:
+            sa_.syntax_error();
+            error_ = true;
+            return false;
+        }
+    }
+
+    bool gotof_34(int nonterminal_index, const value_type& v)
+    {
+        switch(nonterminal_index){
+        case 1: return push_stack(&parser::state_13, &parser::gotof_13, v);
+        default: assert(0); return false;
+        }
+    }
+
+    bool state_34(token_type token, const value_type& value)
+    {
+        switch(token){
+        case token_double_slash:
+        case token_hat:
+        case token_asterisk:
+        case token_slash:
+        case token_plus:
+        case token_minus:
+        case token_left_paren:
+        case token_right_arrow:
+        case token_identifier:
+        case token_symbol:
+        case token_0:
+            return call_0_0(1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1618,7 +1678,7 @@ private:
         switch(token){
         case token_equal:
             // shift
-            push_stack(&parser::state_12, &parser::gotof_12, value);
+            push_stack(&parser::state_34, &parser::gotof_34, value);
             return false;
         default:
             sa_.syntax_error();

@@ -82,7 +82,13 @@ struct sequence : eval_target{
     sequence() : e(nullptr), next(nullptr), head(nullptr){}
 
     virtual std::string ast_str() const{
-        return "sequence";
+        std::string str;
+        str += "(seq";
+        for(const sequence *ptr = head; ptr; ptr = ptr->next.get()){
+            str += " " + ptr->e->ast_str();
+        }
+        str += ")";
+        return str;
     }
 
     // 評価対象の式
@@ -107,6 +113,7 @@ struct lambda : eval_target{
             str += " " + ptr->e->ast_str();
         }
         str += " -> " + e->ast_str() + ")";
+        return str;
     }
 
     // lambda式の引数
@@ -311,18 +318,15 @@ public:
         return n;
     }
 
-    sequence *make_seq(symbol *s){
-        sequence *ptr = new sequence;
-        ptr->e.reset(s);
-        ptr->head = ptr;
-        return ptr;
-    }
-
     sequence *make_seq(sequence *s, eval_target *e){
         sequence *ptr = new sequence;
         ptr->e.reset(e);
-        ptr->head = s->head;
-        s->next.reset(ptr);
+        if(s){
+            ptr->head = s->head;
+            s->next.reset(ptr);
+        }else{
+            ptr->head = ptr;
+        }
         return ptr;
     }
 
@@ -339,7 +343,7 @@ int main(){
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        "f (1 + 1) (2 * 2) (3^3)"
+        "a b -> a + b"
     };
 
     if(argc != 2){ return 0; }

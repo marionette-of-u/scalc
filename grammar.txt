@@ -19,8 +19,8 @@
 
 <grammar> parser{
   Statement<eval_target*>
-    : [make_statement] Expr(0) WhereEquality(1)
-    | [define_symbol] keyword_let symbol(0) equal Expr(1)
+    : [make_statement] Sequence(0) WhereEquality(1)
+    | [define_symbol] keyword_let symbol(0) equal Sequence(1)
     ;
 
   WhereEquality<equality_sequence*>
@@ -34,26 +34,25 @@
     ;
 
   Equality<equality*>
-    : [make_equality] symbol(0) equal Expr(1)
-    ;
-
-  Expr<eval_target*>
-    : [make_lambda] Sequence(0) right_arrow Expr(1)
-    | [make_call] Sequence(0)
-    | [make_binary_op] Expr(1) plus(0) Expr(2)
-    | [make_binary_op] Expr(1) minus(0) Expr(2)
-    | [make_binary_op] Expr(1) asterisk(0) Expr(2)
-    | [make_binary_op] Expr(1) slash(0) Expr(2)
-    | [make_binary_op] Expr(1) hat(0) Expr(2)
-    | [make_binary_op] Expr(1) double_slash(0) Expr(2)
-    | [identity] left_paren Expr(0) right_paren
-    | [identity] identifier(0)
-    | [make_negate_expr] <unary_minus> minus Expr(0)
+    : [make_equality] symbol(0) equal Sequence(1)
     ;
 
   Sequence<sequence*>
-    : [make_seq] symbol(0)
-    | [make_seq] Sequence(0) Expr(1)
+    : [make_seq] Sequence(0) BaseExpr(1)
+    | []
+    ;
+
+  BaseExpr<eval_target*>
+    : [make_lambda] Sequence(0) right_arrow BaseExpr(1)
+    | [make_binary_op] BaseExpr(1) plus(0) BaseExpr(2)
+    | [make_binary_op] BaseExpr(1) minus(0) BaseExpr(2)
+    | [make_binary_op] BaseExpr(1) asterisk(0) BaseExpr(2)
+    | [make_binary_op] BaseExpr(1) slash(0) BaseExpr(2)
+    | [make_binary_op] BaseExpr(1) hat(0) BaseExpr(2)
+    | [make_binary_op] BaseExpr(1) double_slash(0) BaseExpr(2)
+    | [make_negate_expr] <unary_minus> minus BaseExpr(0)
+    | [identity] left_paren Sequence(0) right_paren
+    | [identity] identifier(0)
+    | [identity] symbol(0)
     ;
 }
-

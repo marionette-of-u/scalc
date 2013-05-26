@@ -10,7 +10,7 @@
 # 使用言語・ツールと動作確認
 <table>
 <tr><td>Language</td><td>C++11 (VC++ 11.0)</td></tr>
-<tr><td>Tools</td><td>kp19pp Ver. Mar 28, 2013 (<a href="https://github.com/marionette-of-u/kp19pp">kp19pp</a>), paper_cutter Ver. Jul 07, 2012 (<a href="https://github.com/marionette-of-u/paper_cutter">paper_cutter</a>)</td></tr>
+<tr><td>Tools</td><td>kp19pp Ver. May 26, 2013 (<a href="https://github.com/marionette-of-u/kp19pp">kp19pp</a>), paper_cutter Ver. Jul 07, 2012 (<a href="https://github.com/marionette-of-u/paper_cutter">paper_cutter</a>)</td></tr>
 </table>
 
 # 字句解析及び構文解析の挙動の詳細

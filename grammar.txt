@@ -1,12 +1,12 @@
 <token_desc> token{
   <right>{
     unary_minus;
-    double_slash<bin_op*>;
-    hat<bin_op*>;
+    double_slash<binary_operator*>;
+    hat<binary_operator*>;
   }
   <left>{
-    asterisk<bin_op*>, slash<bin_op*>;
-    plus<bin_op*>, minus<bin_op*>;
+    asterisk<binary_operator*>, slash<binary_operator*>;
+    plus<binary_operator*>, minus<binary_operator*>;
   }
   left_paren, right_paren;
   <left>{
@@ -18,7 +18,7 @@
 }
 
 <grammar> parser{
-  Statement<statement*>
+  Statement<eval_target*>
     : [make_statement] Expr(0) WhereEquality(1)
     | [define_symbol] keyword_let symbol(0) equal Expr(1)
     ;
@@ -37,7 +37,7 @@
     : [make_equality] symbol(0) equal Expr(1)
     ;
 
-  Expr<expr*>
+  Expr<eval_target*>
     : [make_lambda] Sequence(0) right_arrow Expr(1)
     | [make_call] Sequence(0)
     | [make_binary_op] Expr(1) plus(0) Expr(2)
@@ -47,7 +47,7 @@
     | [make_binary_op] Expr(1) hat(0) Expr(2)
     | [make_binary_op] Expr(1) double_slash(0) Expr(2)
     | [identity] left_paren Expr(0) right_paren
-    | [make_identifier] identifier(0)
+    | [identity] identifier(0)
     | [make_negate_expr] <unary_minus> minus Expr(0)
     ;
 

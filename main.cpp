@@ -26,7 +26,6 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
-
 // ---- ast element type.
 
 struct eval_target{
@@ -54,10 +53,12 @@ struct symbol : eval_target{
 };
 
 struct binary_operator : eval_target{
+    binary_operator() : lhs(nullptr), rhs(nullptr){}
+
     virtual std::string ast_str() const{
         std::string str;
         str += "(";
-        str += op_s + " " + lhs->ast_str() + rhs->ast_str();
+        str += op_s + " " + lhs->ast_str() + " " + rhs->ast_str();
         str += ")";
         return str;
     }
@@ -67,16 +68,38 @@ struct binary_operator : eval_target{
     std::unique_ptr<eval_target> lhs, rhs;
 };
 
-struct sequence{
+struct negate_expr : eval_target{
+    negate_expr() : operand(nullptr){}
+
+    virtual std::string ast_str() const{
+        return "-" + operand->ast_str();
+    }
+
+    std::unique_ptr<eval_target> operand;
+};
+
+struct sequence : eval_target{
+    sequence() : e(nullptr), next(nullptr), head(nullptr){}
+
+    virtual std::string ast_str() const{
+        return "sequence";
+    }
+
     // 評価対象の式
     // もしこのsequenceが先頭にあれば, eは必ず記号を指す
     std::unique_ptr<eval_target> e;
 
     // リンクリスト 次の評価対象の式
     std::unique_ptr<sequence> next;
+
+    // 先頭
+    // nextがnullptrの場合のみ有効
+    sequence *head;
 };
 
 struct lambda : eval_target{
+    lambda() : args(nullptr), e(nullptr){}
+
     virtual std::string ast_str() const{
         std::string str;
         str += "(lambda";
@@ -94,13 +117,16 @@ struct lambda : eval_target{
 };
 
 struct call : eval_target{
+    call() : fn_and_args(nullptr){}
+
     virtual std::string ast_str() const{
         std::string str;
         str += "(call";
-        for(const sequence *ptr = fn_and_args.get(); ptr; ptr = ptr->next.get()){
+        for(const sequence *ptr = fn_and_args->head; ptr; ptr = ptr->next.get()){
             str += " " + ptr->e->ast_str();
         }
         str += ")";
+        return str;
     }
 
     // 関数及び関数の引数
@@ -108,7 +134,17 @@ struct call : eval_target{
     std::unique_ptr<sequence> fn_and_args;
 };
 
-struct equality{
+struct equality : eval_target{
+    equality() : s(nullptr), e(nullptr){}
+
+    virtual std::string ast_str() const{
+        std::string str;
+        str += s->ast_str();
+        str += " = ";
+        str += e->ast_str();
+        return str;
+    }
+
     // 左辺 記号
     std::unique_ptr<symbol> s;
 
@@ -116,20 +152,62 @@ struct equality{
     std::unique_ptr<eval_target> e;
 };
 
-struct equality_sequence{
+struct equality_sequence : eval_target{
+    equality_sequence() : e(nullptr), next(nullptr), head(nullptr){}
+
+    virtual std::string ast_str() const{
+        return "equality_sequence";
+    }
+
     // 等式
     std::unique_ptr<equality> e;
 
     // リンクリスト 次の等式
     std::unique_ptr<equality_sequence> next;
+
+    // 先頭
+    // nextがnullptrの場合のみ有効
+    equality_sequence *head;
 };
 
-struct statement{
+struct statement : eval_target{
+    statement() : e(nullptr), w(nullptr){}
+
+    virtual std::string ast_str() const{
+        std::string str;
+        str += e->ast_str();
+        if(w){
+            str += " where";
+            for(const equality_sequence *ptr = w.get(); ptr; ptr = ptr->next.get()){
+                str += " " + ptr->e->ast_str();
+            }
+        }
+        return str;
+    }
+
     // 評価対象の式
     std::unique_ptr<eval_target> e;
 
     // where部
     std::unique_ptr<equality_sequence> w;
+};
+
+struct defined_symbol : eval_target{
+    defined_symbol() : e(nullptr), s(nullptr){}
+
+    virtual std::string ast_str() const{
+        std::string str;
+        str += s->ast_str();
+        str += " = ";
+        str += e->ast_str();
+        return str;
+    }
+
+    // 束縛対象の式
+    std::unique_ptr<eval_target> e;
+
+    // 束縛対象に結び付けられる名前
+    std::unique_ptr<symbol> s;
 };
 
 
@@ -151,8 +229,10 @@ public:
     virtual ~error() throw(){}
 };
 
-class semantic_action{
+class calculator{
 public:
+    typedef std::map<std::string, std::unique_ptr<eval_target>> symbol_map;
+
     void syntax_error(){
         throw(error("syntax error."));
     }
@@ -166,22 +246,100 @@ public:
         x = static_cast<T*>(y);
     }
 
-    template<class T>
-    static void upcast(eval_target *&x, T *y){
+    template<class U>
+    static void upcast(eval_target *&x, U *y){
         x = y;
+    }
+
+    eval_target *make_statement(eval_target *e, equality_sequence *es){
+        statement *s = new statement;
+        s->e.reset(e);
+        s->w.reset(es);
+        return s;
+    }
+
+    eval_target *define_symbol(symbol *s, eval_target *e){
+        defined_symbol *d = new defined_symbol;
+        d->s.reset(s);
+        return d;
+    }
+
+    equality_sequence *make_equality_sequence(equality *e){
+        equality_sequence *es = new equality_sequence;
+        es->e.reset(e);
+        es->head = es;
+        return es;
+    }
+
+    equality_sequence *make_equality_sequence(equality_sequence *es, equality *e){
+        equality_sequence *ptr = new equality_sequence;
+        ptr->e.reset(e);
+        es->next.reset(ptr);
+        ptr->head = es->head;
+        return ptr;
+    }
+
+    equality *make_equality(symbol *s, eval_target *e){
+        equality *ptr = new equality;
+        ptr->s.reset(s);
+        ptr->e.reset(e);
+        return ptr;
+    }
+
+    eval_target *make_lambda(sequence *s, eval_target *e){
+        lambda *l = new lambda;
+        l->args.reset(s);
+        l->e.reset(e);
+        return l;
+    }
+
+    eval_target *make_call(sequence *s){
+        call *c = new call;
+        c->fn_and_args.reset(s);
+        return c;
+    }
+
+    eval_target *make_binary_op(binary_operator *e, eval_target *lhs, eval_target *rhs){
+        e->lhs.reset(lhs);
+        e->rhs.reset(rhs);
+        return e;
+    }
+
+    negate_expr *make_negate_expr(eval_target *e){
+        negate_expr *n = new negate_expr;
+        n->operand.reset(e);
+        return n;
+    }
+
+    sequence *make_seq(symbol *s){
+        sequence *ptr = new sequence;
+        ptr->e.reset(s);
+        ptr->head = ptr;
+        return ptr;
+    }
+
+    sequence *make_seq(sequence *s, eval_target *e){
+        sequence *ptr = new sequence;
+        ptr->e.reset(e);
+        ptr->head = s->head;
+        s->next.reset(ptr);
+        return ptr;
     }
 
     template<class T>
     T *identity(T *subtree){
         return subtree;
     }
+
+private:
+    symbol_map symbol_table;
 };
 
 int main(){
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        "1 + 1^a"
+        "f (1 + 1) (2 * 2) (3^3)"
     };
 
     if(argc != 2){ return 0; }
@@ -201,6 +359,59 @@ int main(){
             token_sequence.begin()
         )
     );
+
+    calculator calc;
+    eval_target *target_ptr;
+    parser::parser<eval_target*, calculator> p(calc);
+    for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
+        target_ptr = nullptr;
+
+        parser::token t = static_cast<parser::token>(iter->first);
+        switch(t){
+        case parser::token_double_slash:
+        case parser::token_hat:
+        case parser::token_asterisk:
+        case parser::token_slash:
+        case parser::token_plus:
+        case parser::token_minus:
+            {
+                binary_operator *b = new binary_operator;
+                b->op_s.assign(iter->second.first, iter->second.second);
+                target_ptr = b;
+            }
+            break;
+
+        case parser::token_identifier:
+            {
+                value *v = new value;
+                std::stringstream ss;
+                ss << std::string(iter->second.first, iter->second.second);
+                ss >> v->v;
+                target_ptr = v;
+            }
+            break;
+
+        case parser::token_symbol:
+            {
+                symbol *s = new symbol;
+                s->s = std::string(iter->second.first, iter->second.second);
+                target_ptr = s;
+            }
+            break;
+
+        default:
+            target_ptr = nullptr;
+        }
+        
+        if(p.post(t, target_ptr)){ break; }
+    }
+    p.post(parser::token_0, target_ptr);
+    
+    eval_target *root = nullptr;
+    if(!p.accept(root)){
+        std::cout << "error\n";
+    }
+    std::string r = root->ast_str();
 
     return 0;
 }

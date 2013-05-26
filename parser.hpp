@@ -9,7 +9,7 @@
 namespace parser{
 
 enum token{
-    token_unary_minus,
+    token_unary_minus = lexer::token_double_slash - 1,
     token_double_slash = lexer::token_double_slash,
     token_hat = lexer::token_hat,
     token_asterisk = lexer::token_asterisk,
@@ -25,7 +25,7 @@ enum token{
     token_symbol = lexer::token_symbol,
     token_keyword_where = lexer::token_keyword_where,
     token_keyword_let = lexer::token_keyword_let,
-    token_0
+    token_0 = -1
 };
 
 template<class T, int StackSize>
@@ -209,8 +209,9 @@ private:
     bool call_0_make_call(int nonterminal_index, int base, int arg_index0)
     {
         sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.make_call(arg0);
-        value_type v; sa_.upcast(v, r);
+        eval_target* r = sa_.make_call(arg0);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -219,7 +220,8 @@ private:
     {
         symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         sequence* r = sa_.make_seq(arg0);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -227,9 +229,10 @@ private:
     bool call_1_make_seq(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         sequence* r = sa_.make_seq(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -237,9 +240,10 @@ private:
     bool call_0_make_equality(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         equality* r = sa_.make_equality(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -248,7 +252,8 @@ private:
     {
         equality* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         equality_sequence* r = sa_.make_equality_sequence(arg0);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -257,7 +262,8 @@ private:
     {
         equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         equality_sequence* r = sa_.identity(arg0);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -267,24 +273,25 @@ private:
         equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         equality* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
         equality_sequence* r = sa_.make_equality_sequence(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_(int nonterminal_index, int base)
+    bool call_0_0(int nonterminal_index, int base)
     {
-        equality_sequence* r = sa_.();
-        value_type v; sa_.upcast(v, r);
+        value_type v = value_type();
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
     bool call_0_make_negate_expr(int nonterminal_index, int base, int arg_index0)
     {
-        expr* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.make_negate_expr(arg0);
-        value_type v; sa_.upcast(v, r);
+        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* r = sa_.make_negate_expr(arg0);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -292,20 +299,22 @@ private:
     bool call_0_make_lambda(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        expr* r = sa_.make_lambda(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* r = sa_.make_lambda(arg0, arg1);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
     bool call_0_make_binary_op(int nonterminal_index, int base, int arg_index0, int arg_index1, int arg_index2)
     {
-        bin_op* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        expr* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
-        expr* r = sa_.make_binary_op(arg0, arg1, arg2);
-        value_type v; sa_.upcast(v, r);
+        binary_operator* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
+        eval_target* r = sa_.make_binary_op(arg0, arg1, arg2);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -313,37 +322,41 @@ private:
     bool call_0_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
         symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        statement* r = sa_.define_symbol(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
-        pop_stack(base);
-        return (this->*(stack_top()->gotof))(nonterminal_index, v);
-    }
-
-    bool call_0_make_identifier(int nonterminal_index, int base, int arg_index0)
-    {
-        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.make_identifier(arg0);
-        value_type v; sa_.upcast(v, r);
+        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        eval_target* r = sa_.define_symbol(arg0, arg1);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
     bool call_1_identity(int nonterminal_index, int base, int arg_index0)
     {
-        expr* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        expr* r = sa_.identity(arg0);
-        value_type v; sa_.upcast(v, r);
+        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* r = sa_.identity(arg0);
+        value_type v;
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_2_identity(int nonterminal_index, int base, int arg_index0)
+    {
+        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* r = sa_.identity(arg0);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
     bool call_0_make_statement(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        expr* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         equality_sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        statement* r = sa_.make_statement(arg0, arg1);
-        value_type v; sa_.upcast(v, r);
+        eval_target* r = sa_.make_statement(arg0, arg1);
+        value_type v;
+        sa_.upcast(v, r);
         pop_stack(base);
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
@@ -1089,7 +1102,7 @@ private:
             push_stack(&parser::state_15, &parser::gotof_15, value);
             return false;
         case token_0:
-            return call_0_(3, 0);
+            return call_0_0(3, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1517,7 +1530,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_0_make_identifier(2, 1, 0);
+            return call_1_identity(2, 1, 0);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1548,7 +1561,7 @@ private:
         case token_symbol:
         case token_keyword_where:
         case token_0:
-            return call_1_identity(2, 3, 1);
+            return call_2_identity(2, 3, 1);
         default:
             sa_.syntax_error();
             error_ = true;

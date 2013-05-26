@@ -269,23 +269,81 @@ public:
     static std::pair<bool, InputIter> reg_identifier(InputIter first, InputIter last){
         InputIter iter = first;
         bool match = true;
-        if(iter == last){ match = false; }else{ 
+        if(iter == last){ match = false; }else{
             InputIter iter_prime = iter;
             do{
+                if(iter == last){ match = false; }else{ 
+                    InputIter iter_prime = iter;
+                    do{
+                        if(iter == last){ match = false; }else{
+                            InputIter iter_prime = iter;
+                            do{
+                                if(iter == last){ match = false; }else{
+                                    char c = *iter;
+                                    if(
+                                        ((c >= '1') && (c <= '9'))
+                                    ){
+                                        ++iter;
+                                        match = true;
+                                    }else{ match = false; }
+                                }
+                                if(!match){ iter = iter_prime; break; }
+                                {
+                                    InputIter iter_prime = iter;
+                                    while(iter != last){
+                                        if(iter == last){ match = false; }else{
+                                            char c = *iter;
+                                            if(
+                                                ((c >= '0') && (c <= '9'))
+                                            ){
+                                                ++iter;
+                                                match = true;
+                                            }else{ match = false; }
+                                        }
+                                        if(match){ iter_prime = iter; }else{
+                                            iter = iter_prime;
+                                            match = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if(!match){ iter = iter_prime; break; }
+                            }while(false);
+                        }
+                        if(match){ break; }else{ iter = iter_prime; }
+                        if(iter != last && *iter == '0'){
+                            ++iter;
+                            match = true;
+                        }else{ match = false; }
+                        if(!match){ iter = iter_prime; }
+                    }while(false);
+                }
+                if(!match){ iter = iter_prime; break; }
                 if(iter == last){ match = false; }else{
                     InputIter iter_prime = iter;
                     do{
                         if(iter == last){ match = false; }else{
-                            char c = *iter;
-                            if(
-                                ((c >= '1') && (c <= '9'))
-                            ){
-                                ++iter;
-                                match = true;
-                            }else{ match = false; }
+                            InputIter iter_prime = iter;
+                            do{
+                                if(iter != last && *iter == '.'){
+                                    ++iter;
+                                    match = true;
+                                }else{ match = false; }
+                                if(!match){ iter = iter_prime; break; }
+                            }while(false);
                         }
                         if(!match){ iter = iter_prime; break; }
-                        {
+                        do{
+                            if(iter == last){ match = false; }else{
+                                char c = *iter;
+                                if(
+                                    ((c >= '0') && (c <= '9'))
+                                ){
+                                    ++iter;
+                                    match = true;
+                                }else{ match = false; }
+                            }
+                            if(!match){ break; }
                             InputIter iter_prime = iter;
                             while(iter != last){
                                 if(iter == last){ match = false; }else{
@@ -303,16 +361,12 @@ public:
                                     break;
                                 }
                             }
-                        }
+                        }while(false);
                         if(!match){ iter = iter_prime; break; }
                     }while(false);
                 }
-                if(match){ break; }else{ iter = iter_prime; }
-                if(iter != last && *iter == '0'){
-                    ++iter;
-                    match = true;
-                }else{ match = false; }
-                if(!match){ iter = iter_prime; }
+                match = true;
+                if(!match){ iter = iter_prime; break; }
             }while(false);
         }
         return std::make_pair(match, iter);

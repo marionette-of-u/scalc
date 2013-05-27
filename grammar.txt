@@ -39,12 +39,12 @@
 
   Sequence<sequence*>
     : [make_seq] Sequence(0) BaseExpr(1)
+    | [make_lambda] Sequence(0) right_arrow BaseExpr(1)
     | []
     ;
 
   BaseExpr<eval_target*>
-    : [make_lambda] Sequence(0) right_arrow BaseExpr(1)
-    | [make_binary_op] BaseExpr(1) plus(0) BaseExpr(2)
+    : [make_binary_op] BaseExpr(1) plus(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) minus(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) asterisk(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) slash(0) BaseExpr(2)

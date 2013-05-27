@@ -83,33 +83,31 @@ struct sequence : eval_target{
 
     virtual std::string ast_str() const{
         std::string str;
-        str += "(seq";
+        str += "(";
         for(const sequence *ptr = head; ptr; ptr = ptr->next.get()){
-            str += " " + ptr->e->ast_str();
+            str += (ptr != head ? " " : "") + ptr->e->ast_str();
         }
         str += ")";
         return str;
     }
 
     // 評価対象の式
-    // もしこのsequenceが先頭にあれば, eは必ず記号を指す
     std::unique_ptr<eval_target> e;
 
     // リンクリスト 次の評価対象の式
     std::unique_ptr<sequence> next;
 
     // 先頭
-    // nextがnullptrの場合のみ有効
     sequence *head;
 };
 
-struct lambda : eval_target{
-    lambda() : args(nullptr), e(nullptr){}
+struct lambda : sequence{
+    lambda() : args(nullptr){}
 
     virtual std::string ast_str() const{
         std::string str;
         str += "(lambda";
-        for(const sequence *ptr = args.get(); ptr; ptr = ptr->next.get()){
+        for(const sequence *ptr = args->head; ptr; ptr = ptr->next.get()){
             str += " " + ptr->e->ast_str();
         }
         str += " -> " + e->ast_str() + ")";
@@ -118,27 +116,6 @@ struct lambda : eval_target{
 
     // lambda式の引数
     std::unique_ptr<sequence> args;
-
-    // lambda式の本体
-    std::unique_ptr<eval_target> e;
-};
-
-struct call : eval_target{
-    call() : fn_and_args(nullptr){}
-
-    virtual std::string ast_str() const{
-        std::string str;
-        str += "(call";
-        for(const sequence *ptr = fn_and_args->head; ptr; ptr = ptr->next.get()){
-            str += " " + ptr->e->ast_str();
-        }
-        str += ")";
-        return str;
-    }
-
-    // 関数及び関数の引数
-    // 先頭は必ず関数を指す
-    std::unique_ptr<sequence> fn_and_args;
 };
 
 struct equality : eval_target{
@@ -173,7 +150,6 @@ struct equality_sequence : eval_target{
     std::unique_ptr<equality_sequence> next;
 
     // 先頭
-    // nextがnullptrの場合のみ有効
     equality_sequence *head;
 };
 
@@ -293,19 +269,6 @@ public:
         return ptr;
     }
 
-    eval_target *make_lambda(sequence *s, eval_target *e){
-        lambda *l = new lambda;
-        l->args.reset(s);
-        l->e.reset(e);
-        return l;
-    }
-
-    eval_target *make_call(sequence *s){
-        call *c = new call;
-        c->fn_and_args.reset(s);
-        return c;
-    }
-
     eval_target *make_binary_op(binary_operator *e, eval_target *lhs, eval_target *rhs){
         e->lhs.reset(lhs);
         e->rhs.reset(rhs);
@@ -324,10 +287,16 @@ public:
         if(s){
             ptr->head = s->head;
             s->next.reset(ptr);
-        }else{
-            ptr->head = ptr;
-        }
+        }else{ ptr->head = ptr; }
         return ptr;
+    }
+
+    sequence *make_lambda(sequence *s, eval_target *e){
+        lambda *l = new lambda;
+        l->args.reset(s);
+        l->e.reset(e);
+        l->head = l;
+        return make_seq(nullptr, l);
     }
 
     template<class T>
@@ -343,7 +312,7 @@ int main(){
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        "a b -> a + b"
+        "q_fn 512 * 512 * 1024 // 512 (a b -> a + b) c d"
     };
 
     if(argc != 2){ return 0; }
@@ -355,7 +324,7 @@ int main(){
         target_str[i] = argv[1][i];
     }
 
-    lexer::lexer::tokenize(
+    auto lex_result = lexer::lexer::tokenize(
         target_str.begin(),
         target_str.end(),
         std::insert_iterator<lex_data::token_sequence>(
@@ -363,13 +332,16 @@ int main(){
             token_sequence.begin()
         )
     );
+    if(!lex_result.first){
+        std::cout << "lexical error.";
+        return 0;
+    }
 
     calculator calc;
     eval_target *target_ptr;
     parser::parser<eval_target*, calculator> p(calc);
     for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
         target_ptr = nullptr;
-
         parser::token t = static_cast<parser::token>(iter->first);
         switch(t){
         case parser::token_double_slash:
@@ -413,7 +385,8 @@ int main(){
     
     eval_target *root = nullptr;
     if(!p.accept(root)){
-        std::cout << "error\n";
+        std::cout << "parsing error.";
+        return 0;
     }
     std::string r = root->ast_str();
 

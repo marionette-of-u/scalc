@@ -1,4 +1,4 @@
-﻿<token_desc> token{
+<token_desc> token{
   <right>{
     unary_minus, unary_plus;
     double_slash<binary_operator*>;
@@ -31,6 +31,7 @@
   EqualitySequence<equality_sequence*>
     : [make_equality_sequence] Equality(0)
     | [make_equality_sequence] EqualitySequence(0) comma Equality(1)
+    | []
     ;
 
   Equality<equality*>

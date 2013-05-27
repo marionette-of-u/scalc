@@ -15,7 +15,6 @@ typedef fpoint e_type;
 // 多項式の項
 struct node{
     node();
-    ~node();
 
     // 指数
     std::map<std::string, e_type> e;
@@ -26,5 +25,7 @@ struct node{
     // 次の項
     node *next;
 };
+
+void add(node *p, node *q);
 
 #endif // SCALC_COMMON_HPP

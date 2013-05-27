@@ -6,7 +6,6 @@
 #include "common.hpp"
 
 node::node() : e(), real(), imag(), next(nullptr){}
-node::~node(){ delete next; }
 
 template<class T>
 inline std::string to_string(const T &v){
@@ -42,6 +41,13 @@ node *constant(c_type re, c_type im){
         q->real = re, q->imag = im;
         p->next = q;
     }
+    return p;
+}
+
+// 変数を生成
+node *variable(const std::string &str){
+    node *p = constant(1, 0);
+    p->next->e[str] = 1;
     return p;
 }
 

@@ -140,7 +140,7 @@ struct equality_sequence : eval_target{
     equality_sequence() : e(nullptr), next(nullptr), head(nullptr){}
 
     virtual std::string ast_str() const{
-        return "equality_sequence";
+        return "";
     }
 
     // 等式
@@ -161,8 +161,8 @@ struct statement : eval_target{
         str += e->ast_str();
         if(w){
             str += " where";
-            for(const equality_sequence *ptr = w.get(); ptr; ptr = ptr->next.get()){
-                str += " " + ptr->e->ast_str();
+            for(const equality_sequence *ptr = w.get()->head; ptr; ptr = ptr->next.get()){
+                str += (ptr != w.get()->head ? ", " : " ") + ptr->e->ast_str();
             }
         }
         return str;
@@ -243,6 +243,7 @@ public:
 
     eval_target *define_symbol(symbol *s, eval_target *e){
         defined_symbol *d = new defined_symbol;
+        d->e.reset(e);
         d->s.reset(s);
         return d;
     }
@@ -257,8 +258,10 @@ public:
     equality_sequence *make_equality_sequence(equality_sequence *es, equality *e){
         equality_sequence *ptr = new equality_sequence;
         ptr->e.reset(e);
-        es->next.reset(ptr);
-        ptr->head = es->head;
+        if(es){
+            ptr->head = es->head;
+            es->next.reset(ptr);
+        }else{ ptr->head = ptr; }
         return ptr;
     }
 
@@ -312,7 +315,8 @@ int main(){
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        "q_fn 512 * 512 * 1024 // 512 (a b -> a + b) c d"
+        //"q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
+        "let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
     };
 
     if(argc != 2){ return 0; }

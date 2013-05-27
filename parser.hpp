@@ -1461,6 +1461,9 @@ private:
             // shift
             push_stack(&parser::state_30, &parser::gotof_30, value);
             return false;
+        case token_comma:
+        case token_0:
+            return call_1_0(4, 0);
         default:
             sa_.syntax_error();
             error_ = true;

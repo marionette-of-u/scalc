@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <functional>
 #include <vector>
 #include <map>
@@ -341,7 +341,6 @@ int main(){
     eval_target *target_ptr;
     parser::parser<eval_target*, calculator> p(calc);
     for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
-        target_ptr = nullptr;
         parser::token t = static_cast<parser::token>(iter->first);
         switch(t){
         case parser::token_double_slash:

@@ -1,29 +1,19 @@
-#include <map>
-#include <set>
-#include <memory>
-#include <string>
+﻿#include <string>
+#include <sstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
 #include "common.hpp"
 
-// 係数
-typedef fpoint c_type;
-// 指数
-typedef fpoint e_type;
+node::node() : e(), real(), imag(), next(nullptr){}
+node::~node(){ delete next; }
 
-// 多項式の項
-struct node{
-    node() : e(), real(), imag(), next(nullptr){}
-
-    // 指数
-    std::map<std::string, e_type> e;
-
-    // 実部, 虚部
-    c_type real, imag;
-
-    node *next;
-};
+template<class T>
+inline std::string to_string(const T &v){
+    std::stringstream ss;
+    ss << v;
+    return ss.str();
+}
 
 // 項を生成
 node *new_node(){
@@ -150,3 +140,51 @@ void add(node *p, node *q){
     }
 }
 
+// 式を文字列として得る
+std::string poly_to_string(const node *p){
+    bool first, one;
+    c_type re, im;
+    e_type e;
+    std::string r;
+
+    first = true;
+    while(p = p->next){
+        one = false;
+        re = p->real;
+        im = p->imag;
+        if(im == 0){
+            if(re >= 0){
+                if(!first){ r += " + "; }
+            }else{
+                re = -re;
+                r += " - ";
+            }
+            if(re == 1){ one = true; }else{ r += to_string(re); }
+        }else if(re == 0){
+            if(im >= 0){
+                if(!first){ r += " + "; }
+            }else{
+                im = -im;
+                r += " - ";
+            }
+            r += to_string(im) + "i";
+        }else{
+            if(!first){ r += " + "; }
+            r += to_string(re) + "+" + to_string(im) + "i";
+        }
+        first = false;
+        for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
+            if((e = iter->second) != 0){
+                if(!one){ r += " * "; }
+                one = false;
+                r += iter->first;
+                if(e != 1){
+                    r += "^" + to_string(e);
+                }
+            }
+        }
+        if(one){ r += "1"; }
+    }
+    if(first){ r += "0"; }
+    return r;
+}

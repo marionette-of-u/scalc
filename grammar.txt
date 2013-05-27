@@ -1,6 +1,6 @@
-<token_desc> token{
+﻿<token_desc> token{
   <right>{
-    unary_minus;
+    unary_minus, unary_plus;
     double_slash<binary_operator*>;
     hat<binary_operator*>;
   }
@@ -51,6 +51,7 @@
     | [make_binary_op] BaseExpr(1) hat(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) double_slash(0) BaseExpr(2)
     | [make_negate_expr] <unary_minus> minus BaseExpr(0)
+    | [identity] <unary_plus> plus BaseExpr(0)
     | [identity] left_paren Sequence(0) right_paren
     | [identity] identifier(0)
     | [identity] symbol(0)

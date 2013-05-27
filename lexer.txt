@@ -1,4 +1,4 @@
-lexer
+﻿lexer
   whitespace   != " "+
   right_arrow   = "->"
   double_slash  = "//"

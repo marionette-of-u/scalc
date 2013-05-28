@@ -30,7 +30,6 @@ namespace lex_data{
 
 struct eval_target{
     virtual ~eval_target(){}
-
     virtual std::string ast_str() const = 0;
 };
 
@@ -394,10 +393,20 @@ int main(){
     std::string r = root->ast_str();
     */
 
-    node *a = variable("x", 3), *b = variable("x", 2);
-    node *c = multiply(a, b);
-    std::string r = poly_to_string(c);
-    dispose(a), dispose(b), dispose(c);
+    node *a = variable("x", 3);
+    {
+        node *b = variable("x", 2), *c = variable("x", 1);
+        add(b, c);
+        add(a, b);
+    }
+    {
+        node *b = variable("y", 3), *c = variable("y", 1);
+        add(b, c);
+        add(a, b);
+    }
+    a = power(a, 2);
+    std::string r = poly_to_string(a);
+    dispose(a);
 
     return 0;
 }

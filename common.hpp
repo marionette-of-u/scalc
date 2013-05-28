@@ -2,7 +2,7 @@
 #define SCALC_COMMON_HPP
 
 #include <map>
-#include <set>
+#include <utility>
 #include <memory>
 
 typedef double fpoint;
@@ -35,6 +35,7 @@ node *copy(node *p);
 void change_sign(node *p);
 void add(node *p, node *q);
 node *multiply(node *x, node *y);
+node *power(node *x, e_type n);
 std::string poly_to_string(const node *p);
 
 #endif // SCALC_COMMON_HPP

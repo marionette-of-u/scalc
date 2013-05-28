@@ -208,6 +208,45 @@ node *multiply(node *x, node *y){
     return r;
 }
 
+// 累乗
+// xは破棄する
+node *power(node *x, e_type n){
+    if(n == 1){ return x; }
+    node *p, *q;
+    if(n == 0){
+        p = constant(1, 0);
+    }else if(n > 0){
+        e_type i = std::floor(n), f = n - i;
+        if(f == 0){
+            p = multiply(x, x), i -= 2;
+            if(n > 0){
+                q = p;
+                if(std::fmod(i, 2.0) == 1){
+                    p = multiply(q, x);
+                }else{
+                    p = copy(q);
+                }
+                dispose(x), x = q, i = std::floor(i / 2);
+                if(std::fmod(i, 2.0) == 1){
+                    q = multiply(p, x), dispose(p), p = q;
+                }
+                while((i = std::floor(i / 2)) != 0){
+                    q = multiply(x, x), dispose(x), x = q;
+                    if(std::fmod(i, 2.0) == 1){
+                        q = multiply(p, x), dispose(p), p = q;
+                    }
+                }
+            }
+        }else{
+            p = nullptr;// TODO f
+        }
+    }else{
+        p = nullptr; // TODO n < 0
+    }
+    dispose(x);
+    return p;
+}
+
 // 式を文字列として得る
 std::string poly_to_string(const node *p){
     bool first, one;
@@ -222,30 +261,30 @@ std::string poly_to_string(const node *p){
         im = p->imag;
         if(im == 0){
             if(re >= 0){
-                if(!first){ r += " + "; }
+                if(!first){ r += "+"; }
             }else{
                 re = -re;
-                r += " - ";
+                r += "-";
             }
             if(re == 1){ one = true; }else{ r += to_string(re); }
         }else if(re == 0){
             if(im >= 0){
-                if(!first){ r += " + "; }
+                if(!first){ r += "+"; }
             }else{
                 im = -im;
-                r += " - ";
+                r += "-";
             }
             r += (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
         }else{
-            if(!first){ r += " + "; }
+            if(!first){ r += "+"; }
             bool nega;
             if(nega = im < 0){ im = -im; }
-            r += to_string(re) + (nega ? " - " : " + ") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
+            r += to_string(re) + (nega ? "-" : "+") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
         }
         first = false;
         for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
             if((e = iter->second) != 0){
-                if(!one){ r += " * "; }
+                if(!one){ r += "*"; }
                 one = false;
                 r += iter->first;
                 if(e != 1){

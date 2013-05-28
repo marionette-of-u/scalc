@@ -6,6 +6,8 @@
 #include <cmath>
 #include "common.hpp"
 
+namespace poly{
+
 node::node() : e(), real(), imag(), next(nullptr){}
 
 template<class T>
@@ -70,26 +72,6 @@ void change_sign(node *p){
     while(p = p->next){
         p->real = -p->real;
         p->imag = -p->imag;
-    }
-}
-
-// 微分
-void differentiate(node *p, const std::string &str){
-    node *p1;
-    p1 = p, p = p->next;
-    while(p){
-        auto iter = p->e.find(str);
-        if(iter != p->e.end()){
-            fpoint e = iter->second;
-            iter->second = e - 1;
-            p->real *= e;
-            p->imag *= e;
-            p1 = p, p = p->next;
-        }else{
-            p = p->next;
-            dispose_node(p1->next);
-            p1->next = p;
-        }
     }
 }
 
@@ -296,4 +278,6 @@ std::string poly_to_string(const node *p){
     }
     if(first){ r += "0"; }
     return r;
+}
+
 }

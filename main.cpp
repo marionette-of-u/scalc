@@ -7,6 +7,7 @@
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <exception>
 #include <cstring>
 #include "common.hpp"
 #include "parser.hpp"
@@ -195,8 +196,6 @@ struct defined_symbol : eval_target{
 
 // ---- semantic action.
 
-#include <exception>
-
 class error : public std::runtime_error{
 public:
     error(std::string message) throw() : std::runtime_error(message){} 
@@ -306,107 +305,110 @@ public:
 };
 
 int main(){
-    /*
-    int argc = 2;
-    char *argv[] = {
-        "dummy.exe",
-        "q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
-        //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
-    };
+    {
+        int argc = 2;
+        char *argv[] = {
+            "dummy.exe",
+            "q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
+            //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
+        };
 
-    if(argc != 2){ return 0; }
-    statement_str target_str;
-    lex_data::token_sequence token_sequence;
-    std::size_t n = std::strlen(argv[1]);
-    target_str.resize(n);
-    for(std::size_t i = 0; i < n; ++i){
-        target_str[i] = argv[1][i];
-    }
-
-    auto lex_result = lexer::lexer::tokenize(
-        target_str.begin(),
-        target_str.end(),
-        std::insert_iterator<lex_data::token_sequence>(
-            token_sequence,
-            token_sequence.begin()
-        )
-    );
-    if(!lex_result.first){
-        std::cout << "lexical error.";
-        return 0;
-    }
-
-    semantic_action sa;
-    eval_target *target_ptr;
-    parser::parser<eval_target*, semantic_action> p(sa);
-    try{
-        for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
-            parser::token t = static_cast<parser::token>(iter->first);
-            switch(t){
-            case parser::token_double_slash:
-            case parser::token_hat:
-            case parser::token_asterisk:
-            case parser::token_slash:
-            case parser::token_plus:
-            case parser::token_minus:
-                {
-                    binary_operator *b = new binary_operator;
-                    b->op_s.assign(iter->second.first, iter->second.second);
-                    target_ptr = b;
-                }
-                break;
-
-            case parser::token_identifier:
-                {
-                    value *v = new value;
-                    std::stringstream ss;
-                    ss << std::string(iter->second.first, iter->second.second);
-                    ss >> v->v;
-                    target_ptr = v;
-                }
-                break;
-
-            case parser::token_symbol:
-                {
-                    symbol *s = new symbol;
-                    s->s = std::string(iter->second.first, iter->second.second);
-                    target_ptr = s;
-                }
-                break;
-
-            default:
-                target_ptr = nullptr;
-            }
-        
-            if(p.post(t, target_ptr)){ break; }
+        if(argc != 2){ return 0; }
+        statement_str target_str;
+        lex_data::token_sequence token_sequence;
+        std::size_t n = std::strlen(argv[1]);
+        target_str.resize(n);
+        for(std::size_t i = 0; i < n; ++i){
+            target_str[i] = argv[1][i];
         }
-        p.post(parser::token_0, target_ptr);
-    }catch(std::runtime_error &e){
-        std::cout << "parsing error: " << e.what();
-    }
-    
-    eval_target *root = nullptr;
-    if(!p.accept(root)){
-        std::cout << "parsing error.";
-        return 0;
-    }
-    std::string r = root->ast_str();
-    */
 
-    node *a = variable("x", 3);
-    {
-        node *b = variable("x", 2), *c = variable("x", 1);
-        add(b, c);
-        add(a, b);
+        auto lex_result = lexer::lexer::tokenize(
+            target_str.begin(),
+            target_str.end(),
+            std::insert_iterator<lex_data::token_sequence>(
+                token_sequence,
+                token_sequence.begin()
+            )
+        );
+        if(!lex_result.first){
+            std::cout << "lexical error.";
+            return 0;
+        }
+
+        semantic_action sa;
+        eval_target *target_ptr;
+        parser::parser<eval_target*, semantic_action> p(sa);
+        try{
+            for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
+                parser::token t = static_cast<parser::token>(iter->first);
+                switch(t){
+                case parser::token_double_slash:
+                case parser::token_hat:
+                case parser::token_asterisk:
+                case parser::token_slash:
+                case parser::token_plus:
+                case parser::token_minus:
+                    {
+                        binary_operator *b = new binary_operator;
+                        b->op_s.assign(iter->second.first, iter->second.second);
+                        target_ptr = b;
+                    }
+                    break;
+
+                case parser::token_identifier:
+                    {
+                        value *v = new value;
+                        std::stringstream ss;
+                        ss << std::string(iter->second.first, iter->second.second);
+                        ss >> v->v;
+                        target_ptr = v;
+                    }
+                    break;
+
+                case parser::token_symbol:
+                    {
+                        symbol *s = new symbol;
+                        s->s = std::string(iter->second.first, iter->second.second);
+                        target_ptr = s;
+                    }
+                    break;
+
+                default:
+                    target_ptr = nullptr;
+                }
+        
+                if(p.post(t, target_ptr)){ break; }
+            }
+            p.post(parser::token_0, target_ptr);
+        }catch(std::runtime_error &e){
+            std::cout << "parsing error: " << e.what();
+        }
+    
+        eval_target *root = nullptr;
+        if(!p.accept(root)){
+            std::cout << "parsing error.";
+            return 0;
+        }
+        std::string r = root->ast_str();
     }
+
     {
-        node *b = variable("y", 3), *c = variable("y", 1);
-        add(b, c);
-        add(a, b);
+        using namespace poly;
+        node *a = variable("x", 3);
+        {
+            node *b = variable("x", 2), *c = variable("x", 1);
+            add(b, c);
+            add(a, b);
+        }
+        {
+            node *b = variable("y", 3), *c = variable("y", 1);
+            add(b, c);
+            add(a, b);
+        }
+        a = power(a, 2);
+        std::string s = poly_to_string(a);
+        dispose(a);
     }
-    a = power(a, 2);
-    std::string r = poly_to_string(a);
-    dispose(a);
 
     return 0;
 }

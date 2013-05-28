@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
+#include <cmath>
 #include "common.hpp"
 
 node::node() : e(), real(), imag(), next(nullptr){}
@@ -45,9 +46,9 @@ node *constant(c_type re, c_type im){
 }
 
 // 変数を生成
-node *variable(const std::string &str){
+node *variable(const std::string &str, e_type n = 1){
     node *p = constant(1, 0);
-    p->next->e[str] = 1;
+    p->next->e[str] = n;
     return p;
 }
 
@@ -100,10 +101,10 @@ void complex_conjugate(node *p){
 }
 
 // 加算
-// qは消失する
+// qは消す
 void add(node *p, node *q){
     node *p1 = p, *q1 = q;
-    e_type ep, eq;
+    e_type ep = 0, eq = 0;
     p = p->next;
     q = q->next;
     dispose_node(q1);
@@ -130,13 +131,16 @@ void add(node *p, node *q){
             if(ep <= eq){ break; }
             p1 = p, p = p->next;
         }
-        if(p || ep < eq){
+        if(!p || ep < eq){
             p1->next = q, p1 = q, q = q->next;
             p1->next = p;
         }else{
             p->real += q->real;
             p->imag += q->imag;
             if(p->real != 0 || p->imag != 0){
+                p1 = p;
+                p = p->next;
+            }else{
                 p = p->next;
                 dispose_node(p1->next);
                 p1->next = p;
@@ -144,6 +148,64 @@ void add(node *p, node *q){
             q1 = q, q = q->next, dispose_node(q1);
         }
     }
+}
+
+// 乗算
+// 新たな多項式を返す
+node *multiply(node *x, node *y){
+    e_type ep = 0, eq = 0;
+    node *p, *p1, *q, *r, *z;
+    r = new_node(), q = nullptr;
+    while(y = y->next){
+        p1 = r, p = p1->next, z = x;
+        while(z = z->next){
+            if(!q){ q = new_node(); }
+            q->real = y->real * z->real - y->imag * z->imag;
+            q->imag = y->real * z->imag + y->imag * z->real;
+            q->e = y->e;
+            for(auto iter = z->e.begin(); iter != z->e.end(); ++iter){
+                q->e[iter->first] += iter->second;
+            }
+            while(p){
+                for(auto p_iter = p->e.begin(); p_iter != p->e.end(); ++p_iter){
+                    ep = p_iter->second;
+                    auto q_iter = q->e.find(p_iter->first);
+                    if(q_iter == q->e.end()){
+                        eq = 0;
+                        goto breakpoint;
+                    }else{ eq = q_iter->second; }
+                    if(ep != eq){ goto breakpoint; }
+                }
+                for(auto q_iter = q->e.begin(); q_iter != q->e.end(); ++q_iter){
+                    eq = q_iter->second;
+                    auto p_iter = p->e.find(q_iter->first);
+                    if(p_iter != p->e.end()){ continue; }else{
+                        ep = 0;
+                        goto breakpoint;
+                    }
+                }
+                breakpoint:;
+                if(ep <= eq){ break; }
+                p1 = p, p = p->next;
+            }
+            if(p == nullptr || ep < eq){
+                p1->next = q, p1 = q, p1->next = p;
+                q = nullptr;
+            }else{
+                p->real += q->real;
+                p->imag += q->imag;
+                if(p->real != 0 || p->imag != 0){
+                    p1 = p, p = p->next;
+                }else{
+                    p = p->next;
+                    dispose_node(p1->next);
+                    p1->next = p;
+                }
+            }
+        }
+    }
+    if(q){ dispose_node(q); }
+    return r;
 }
 
 // 式を文字列として得る
@@ -173,10 +235,12 @@ std::string poly_to_string(const node *p){
                 im = -im;
                 r += " - ";
             }
-            r += to_string(im) + "i";
+            r += (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
         }else{
             if(!first){ r += " + "; }
-            r += to_string(re) + "+" + to_string(im) + "i";
+            bool nega;
+            if(nega = im < 0){ im = -im; }
+            r += to_string(re) + (nega ? " - " : " + ") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
         }
         first = false;
         for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){

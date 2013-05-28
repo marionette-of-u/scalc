@@ -26,6 +26,15 @@ struct node{
     node *next;
 };
 
+node *new_node();
+void dispose_node(node *p);
+void dispose(node *p);
+node *constant(c_type re, c_type im);
+node *variable(const std::string &str, e_type n);
+node *copy(node *p);
+void change_sign(node *p);
 void add(node *p, node *q);
+node *multiply(node *x, node *y);
+std::string poly_to_string(const node *p);
 
 #endif // SCALC_COMMON_HPP

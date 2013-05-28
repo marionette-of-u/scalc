@@ -212,16 +212,14 @@ public:
     virtual ~error() throw(){}
 };
 
-class calculator{
+class semantic_action{
 public:
-    typedef std::map<std::string, std::unique_ptr<eval_target>> symbol_map;
-
     void syntax_error(){
         throw(error("syntax error."));
     }
 
     void stack_overflow(){
-        throw(error("stack overflow"));
+        throw(error("stack overflow."));
     }
 
     template<class T>
@@ -306,17 +304,15 @@ public:
     T *identity(T *subtree){
         return subtree;
     }
-
-private:
-    symbol_map symbol_table;
 };
 
 int main(){
+    /*
     int argc = 2;
     char *argv[] = {
         "dummy.exe",
-        //"q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
-        "let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
+        "q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
+        //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
     };
 
     if(argc != 2){ return 0; }
@@ -341,50 +337,54 @@ int main(){
         return 0;
     }
 
-    calculator calc;
+    semantic_action sa;
     eval_target *target_ptr;
-    parser::parser<eval_target*, calculator> p(calc);
-    for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
-        parser::token t = static_cast<parser::token>(iter->first);
-        switch(t){
-        case parser::token_double_slash:
-        case parser::token_hat:
-        case parser::token_asterisk:
-        case parser::token_slash:
-        case parser::token_plus:
-        case parser::token_minus:
-            {
-                binary_operator *b = new binary_operator;
-                b->op_s.assign(iter->second.first, iter->second.second);
-                target_ptr = b;
-            }
-            break;
+    parser::parser<eval_target*, semantic_action> p(sa);
+    try{
+        for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
+            parser::token t = static_cast<parser::token>(iter->first);
+            switch(t){
+            case parser::token_double_slash:
+            case parser::token_hat:
+            case parser::token_asterisk:
+            case parser::token_slash:
+            case parser::token_plus:
+            case parser::token_minus:
+                {
+                    binary_operator *b = new binary_operator;
+                    b->op_s.assign(iter->second.first, iter->second.second);
+                    target_ptr = b;
+                }
+                break;
 
-        case parser::token_identifier:
-            {
-                value *v = new value;
-                std::stringstream ss;
-                ss << std::string(iter->second.first, iter->second.second);
-                ss >> v->v;
-                target_ptr = v;
-            }
-            break;
+            case parser::token_identifier:
+                {
+                    value *v = new value;
+                    std::stringstream ss;
+                    ss << std::string(iter->second.first, iter->second.second);
+                    ss >> v->v;
+                    target_ptr = v;
+                }
+                break;
 
-        case parser::token_symbol:
-            {
-                symbol *s = new symbol;
-                s->s = std::string(iter->second.first, iter->second.second);
-                target_ptr = s;
-            }
-            break;
+            case parser::token_symbol:
+                {
+                    symbol *s = new symbol;
+                    s->s = std::string(iter->second.first, iter->second.second);
+                    target_ptr = s;
+                }
+                break;
 
-        default:
-            target_ptr = nullptr;
-        }
+            default:
+                target_ptr = nullptr;
+            }
         
-        if(p.post(t, target_ptr)){ break; }
+            if(p.post(t, target_ptr)){ break; }
+        }
+        p.post(parser::token_0, target_ptr);
+    }catch(std::runtime_error &e){
+        std::cout << "parsing error: " << e.what();
     }
-    p.post(parser::token_0, target_ptr);
     
     eval_target *root = nullptr;
     if(!p.accept(root)){
@@ -392,6 +392,12 @@ int main(){
         return 0;
     }
     std::string r = root->ast_str();
+    */
+
+    node *a = variable("x", 3), *b = variable("x", 2);
+    node *c = multiply(a, b);
+    std::string r = poly_to_string(c);
+    dispose(a), dispose(b), dispose(c);
 
     return 0;
 }

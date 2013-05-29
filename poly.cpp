@@ -158,12 +158,12 @@ private:
 };
 
 // add
-class add : public binary_operator{
+class bin_add : public binary_operator{
 public:
-    add() : binary_operator(get_type_idx<add>()){}
+    bin_add() : binary_operator(get_type_idx<bin_add>()){}
 
     virtual eval_target *copy() const{
-        add *ptr = new add;
+        bin_add *ptr = new bin_add;
         ptr->lhs.reset(lhs->copy());
         ptr->rhs.reset(rhs->copy());
         return ptr;
@@ -171,12 +171,12 @@ public:
 };
 
 // sub
-class sub : public binary_operator{
+class bin_sub : public binary_operator{
 public:
-    sub() : binary_operator(get_type_idx<sub>()){}
+    bin_sub() : binary_operator(get_type_idx<bin_sub>()){}
 
     virtual eval_target *copy() const{
-        sub *ptr = new sub;
+        bin_sub *ptr = new bin_sub;
         ptr->lhs.reset(lhs->copy());
         ptr->rhs.reset(rhs->copy());
         return ptr;
@@ -184,12 +184,12 @@ public:
 };
 
 // multiply
-class multiply : public binary_operator{
+class bin_multiply : public binary_operator{
 public:
-    multiply() : binary_operator(get_type_idx<multiply>()){}
+    bin_multiply() : binary_operator(get_type_idx<bin_multiply>()){}
 
     virtual eval_target *copy() const{
-        multiply *ptr = new multiply;
+        bin_multiply *ptr = new bin_multiply;
         ptr->lhs.reset(lhs->copy());
         ptr->rhs.reset(rhs->copy());
         return ptr;
@@ -197,12 +197,12 @@ public:
 };
 
 // division
-class division : public binary_operator{
+class bin_division : public binary_operator{
 public:
-    division() : binary_operator(get_type_idx<division>()){}
+    bin_division() : binary_operator(get_type_idx<bin_division>()){}
 
     virtual eval_target *copy() const{
-        division *ptr = new division;
+        bin_division *ptr = new bin_division;
         ptr->lhs.reset(lhs->copy());
         ptr->rhs.reset(rhs->copy());
         return ptr;
@@ -210,12 +210,12 @@ public:
 };
 
 // power
-class power : public binary_operator{
+class bin_power : public binary_operator{
 public:
-    power() : binary_operator(get_type_idx<power>()){}
+    bin_power() : binary_operator(get_type_idx<bin_power>()){}
 
     virtual eval_target *copy() const{
-        power *ptr = new power;
+        bin_power *ptr = new bin_power;
         ptr->lhs.reset(lhs->copy());
         ptr->rhs.reset(rhs->copy());
         return ptr;
@@ -264,6 +264,20 @@ node *constant(fpoint re, fpoint im){
 node *variable(const std::string &str){
     node *p = constant(1, 0);
     static_cast<factor*>(p->value.get())->e[str].reset(new_factor(1, 0));
+    return p;
+}
+
+// 変数のべき乗を生成
+node *variable(const std::string &str, fpoint re, fpoint im = 0){
+    node *p = constant(1, 0);
+    static_cast<factor*>(p->value.get())->e[str].reset(new_factor(re, im));
+    return p;
+}
+
+// 変数の任意のべき乗を生成
+node *variable(const std::string &str, eval_target *ptr){
+    node *p = constant(1, 0);
+    static_cast<factor*>(p->value.get())->e[str].reset(ptr);
     return p;
 }
 

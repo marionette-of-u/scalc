@@ -392,23 +392,23 @@ int main(){
         std::string r = root->ast_str();
     }
 
-    {
-        using namespace poly;
-        node *a = variable("x", 3);
-        {
-            node *b = variable("x", 2), *c = variable("x", 1);
-            add(b, c);
-            add(a, b);
-        }
-        {
-            node *b = variable("y", 3), *c = variable("y", 1);
-            add(b, c);
-            add(a, b);
-        }
-        a = power(a, 2);
-        std::string s = poly_to_string(a);
-        dispose(a);
-    }
+    //{
+    //    using namespace poly;
+    //    node *a = variable("x", 3);
+    //    {
+    //        node *b = variable("x", 2), *c = variable("x", 1);
+    //        add(b, c);
+    //        add(a, b);
+    //    }
+    //    {
+    //        node *b = variable("y", 3), *c = variable("y", 1);
+    //        add(b, c);
+    //        add(a, b);
+    //    }
+    //    a = power(a, 2);
+    //    std::string s = poly_to_string(a);
+    //    dispose(a);
+    //}
 
     return 0;
 }

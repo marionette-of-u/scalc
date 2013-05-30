@@ -1,8 +1,8 @@
 ﻿#include <string>
 #include <sstream>
-#include <cstdio>
 #include <utility>
 #include <memory>
+#include <cstdio>
 #include <cstdlib>
 #include <cctype>
 #include <cmath>
@@ -222,10 +222,27 @@ public:
     }
 };
 
+// lexical compare
+multi_method<int(const eval_target*, const eval_target*)> lexical_compare_table(
+    [](const eval_target*, const eval_target*){
+        throw(error("missing lexical compare function."));
+        return 0;
+    }
+);
+struct lexical_compare_table_initializer{
+    lexical_compare_table_initializer(){
+        lexical_compare_table;
+    }
+} lexical_compare_table_initializer_;
+
+int lexical_compare(const eval_target *lhs, const eval_target *rhs){
+    return 0; // TODO
+}
+
 node::node() : value(nullptr), next(nullptr){}
 
 template<class T>
-inline std::string to_string(const T &v){
+std::string to_string(const T &v){
     std::stringstream ss;
     ss << v;
     return ss.str();

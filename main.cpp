@@ -196,20 +196,6 @@ struct defined_symbol : eval_target{
 
 // ---- semantic action.
 
-class error : public std::runtime_error{
-public:
-    error(std::string message) throw() : std::runtime_error(message){} 
-
-    error(const error &other) throw(): runtime_error(other){}
-
-    error &operator =(const error &other) throw(){
-        std::runtime_error::operator =(other);
-        return *this;
-    }
-
-    virtual ~error() throw(){}
-};
-
 class semantic_action{
 public:
     void syntax_error(){

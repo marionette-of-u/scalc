@@ -231,12 +231,13 @@ multi_method<int(const eval_target*, const eval_target*)> lexical_compare_table(
 );
 struct lexical_compare_table_initializer{
     lexical_compare_table_initializer(){
+        // TODO
         lexical_compare_table;
     }
 } lexical_compare_table_initializer_;
 
 int lexical_compare(const eval_target *lhs, const eval_target *rhs){
-    return 0; // TODO
+    return lexical_compare_table(lhs->type_idx, rhs->type_idx)(lhs, rhs);
 }
 
 node::node() : value(nullptr), next(nullptr){}

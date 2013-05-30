@@ -39,6 +39,10 @@ public:
         a[j] = f;
     }
 
+    inline function_type operator ()(std::size_t i, std::size_t j) const{
+        return function_table[i][j];
+    }
+
 private:
     multi_method(){}
     function_table_type function_table;

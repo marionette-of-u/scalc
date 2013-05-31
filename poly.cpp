@@ -131,8 +131,9 @@ public:
 // binary operator
 class binary_operator : public eval_target{
 public:
-    binary_operator(std::size_t idx) : eval_target(idx){}
+    typedef type_idx_manager<binary_operator> type_sub_idx_manager;
 
+    binary_operator(std::size_t idx) : eval_target(get_type_idx<binary_operator>()), type_sub_idx(idx){}
     virtual bool equal(const eval_target *other) const{
         if(!eval_target::equal(other)){
             return false;
@@ -151,16 +152,17 @@ public:
         rhs->complex_conjugate();
     }
 
+    const int type_sub_idx;
     std::unique_ptr<eval_target> lhs, rhs;
 
 private:
-    binary_operator() : eval_target(0){}
+    binary_operator() : eval_target(0), type_sub_idx(0){}
 };
 
 // add
 class bin_add : public binary_operator{
 public:
-    bin_add() : binary_operator(get_type_idx<bin_add>()){}
+    bin_add() : binary_operator(type_sub_idx_manager::get_type_idx<bin_add>()){}
 
     virtual eval_target *copy() const{
         bin_add *ptr = new bin_add;
@@ -173,7 +175,7 @@ public:
 // sub
 class bin_sub : public binary_operator{
 public:
-    bin_sub() : binary_operator(get_type_idx<bin_sub>()){}
+    bin_sub() : binary_operator(type_sub_idx_manager::get_type_idx<bin_sub>()){}
 
     virtual eval_target *copy() const{
         bin_sub *ptr = new bin_sub;
@@ -186,7 +188,7 @@ public:
 // multiply
 class bin_multiply : public binary_operator{
 public:
-    bin_multiply() : binary_operator(get_type_idx<bin_multiply>()){}
+    bin_multiply() : binary_operator(type_sub_idx_manager::get_type_idx<bin_multiply>()){}
 
     virtual eval_target *copy() const{
         bin_multiply *ptr = new bin_multiply;
@@ -199,7 +201,7 @@ public:
 // division
 class bin_division : public binary_operator{
 public:
-    bin_division() : binary_operator(get_type_idx<bin_division>()){}
+    bin_division() : binary_operator(type_sub_idx_manager::get_type_idx<bin_division>()){}
 
     virtual eval_target *copy() const{
         bin_division *ptr = new bin_division;
@@ -212,7 +214,7 @@ public:
 // power
 class bin_power : public binary_operator{
 public:
-    bin_power() : binary_operator(get_type_idx<bin_power>()){}
+    bin_power() : binary_operator(type_sub_idx_manager::get_type_idx<bin_power>()){}
 
     virtual eval_target *copy() const{
         bin_power *ptr = new bin_power;
@@ -222,22 +224,117 @@ public:
     }
 };
 
-// lexical compare
-multi_method<int(const eval_target*, const eval_target*)> lexical_compare_table(
+// lexicographic compare
+
+int lexicographic_compare(const eval_target *lhs, const eval_target *rhs);
+multi_method<int(const eval_target*, const eval_target*)> lexicographic_compare_table(
     [](const eval_target*, const eval_target*){
-        throw(error("missing lexical compare function."));
+        throw(error("missing lexicographic-compare function."));
         return 0;
     }
 );
-struct lexical_compare_table_initializer{
-    lexical_compare_table_initializer(){
-        // TODO
-        lexical_compare_table;
-    }
-} lexical_compare_table_initializer_;
 
-int lexical_compare(const eval_target *lhs, const eval_target *rhs){
-    return lexical_compare_table(lhs->type_idx, rhs->type_idx)(lhs, rhs);
+template<class T>
+inline int primitive_compare(const T &lhs, const T &rhs){
+    return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
+}
+
+struct lexicographic_compare_table_initializer{
+    lexicographic_compare_table_initializer(){
+        // note: priority of class
+        // PureR > PureC > C
+        // > PureR^E > PureC^E > C^E
+        // > Expression > BinaryOperator > Function
+
+        auto factor_factor = [](const eval_target *lhs, const eval_target *rhs){
+            auto factor_class = [](const factor *f){
+                if(!f->e.empty()){
+                    if(f->imag != 0){
+                        if(f->real != 0){
+                            return 5;
+                        }else{
+                            return 4;
+                        }
+                    }
+                    return 3;
+                }else{
+                    if(f->imag != 0){
+                        if(f->real != 0){
+                            return 2;
+                        }else{
+                            return 1;
+                        }
+                    }
+                    return 0;
+                }
+            };
+            const factor *l = static_cast<const factor*>(lhs), *r = static_cast<const factor*>(rhs);
+            int l_class = factor_class(l), r_class = factor_class(r);
+            if(l_class < r_class){ return -1; }else if(l_class > r_class){ return 1; }
+            int result;
+            auto l_iter = l->e.rbegin(), r_iter = r->e.rbegin();
+            bool l_phi, r_phi;
+            auto exponent_compare = [&](){
+                for(; ; ++l_iter, ++r_iter){
+                    l_phi = l_iter == l->e.rend();
+                    r_phi = r_iter == r->e.rend();
+                    if(l_phi || r_phi){
+                        result = l_phi == r_phi ? 0 : l_phi ? -1 : 1;
+                        break;
+                    }
+                    if(l_iter->first == r_iter->first){
+                        result = lexicographic_compare(l_iter->second.get(), r_iter->second.get());
+                        if(result != 0){ break; }
+                    }else{
+                        result = primitive_compare(l_iter->first, r_iter->first);
+                        break;
+                    }
+                }
+            };
+            switch(l_class){
+            case 5:
+                result = primitive_compare(l->real, r->real);
+                if(result == 0){ result = primitive_compare(l->imag, r->imag); }
+                if(result == 0){ exponent_compare(); }
+                break;
+
+            case 4:
+                result = primitive_compare(l->imag, r->imag);
+                if(result == 0){ exponent_compare(); }
+                break;
+
+            case 3:
+                result = primitive_compare(l->real, r->real);
+                if(result == 0){ exponent_compare(); }
+                break;
+
+            case 2:
+                result = primitive_compare(l->real, r->real);
+                if(result == 0){ result = primitive_compare(l->imag, r->imag); }
+                if(result == 0){ primitive_compare(l->imag, r->imag); }
+                break;
+
+            case 1:
+                result = primitive_compare(l->imag, r->imag);
+                break;
+
+            case 0:
+                result = primitive_compare(l->real, r->real);
+                break;
+
+            default:
+                result = 0;
+            }
+            return result;
+        };
+
+        // TODO
+        lexicographic_compare_table;
+    }
+} lexicographic_compare_table_initializer_;
+
+int lexicographic_compare(const eval_target *lhs, const eval_target *rhs){
+    return lexicographic_compare_table(lhs->type_idx, rhs->type_idx)(lhs, rhs);
 }
 
 node::node() : value(nullptr), next(nullptr){}

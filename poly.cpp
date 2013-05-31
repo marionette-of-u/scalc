@@ -224,8 +224,17 @@ public:
     }
 };
 
-// lexicographic compare
+struct binary_operator_id_initializer{
+    binary_operator_id_initializer(){
+        binary_operator::type_sub_idx_manager::get_type_idx<bin_power>();
+        binary_operator::type_sub_idx_manager::get_type_idx<bin_multiply>();
+        binary_operator::type_sub_idx_manager::get_type_idx<bin_division>();
+        binary_operator::type_sub_idx_manager::get_type_idx<bin_add>();
+        binary_operator::type_sub_idx_manager::get_type_idx<bin_sub>();
+    }
+}binary_operator_id_initializer_;
 
+// lexicographic compare
 int lexicographic_compare(const eval_target *lhs, const eval_target *rhs);
 multi_method<int(const eval_target*, const eval_target*)> lexicographic_compare_table(
     [](const eval_target*, const eval_target*){
@@ -233,20 +242,16 @@ multi_method<int(const eval_target*, const eval_target*)> lexicographic_compare_
         return 0;
     }
 );
-
 template<class T>
-inline int primitive_compare(const T &lhs, const T &rhs){
-    return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
-}
-
+inline int primitive_compare(const T &lhs, const T &rhs){ return lhs < rhs ? -1 : lhs > rhs ? 1 : 0; }
 struct lexicographic_compare_table_initializer{
     lexicographic_compare_table_initializer(){
         // note: priority of class
-        // PureR > PureC > C
-        // > PureR^E > PureC^E > C^E
-        // > Expression > BinaryOperator > Function
+        // R_Only > C_Only > C
+        // > R_Onry^E > C_Onry^E > C^E
+        // > identity > BinaryOperator
 
-        auto factor_factor = [](const eval_target *lhs, const eval_target *rhs){
+        auto factor_factor = [](const eval_target *lhs, const eval_target *rhs) -> int{
             auto factor_class = [](const factor *f){
                 if(!f->e.empty()){
                     if(f->imag != 0){
@@ -327,9 +332,107 @@ struct lexicographic_compare_table_initializer{
             }
             return result;
         };
+        lexicographic_compare_table.set(
+            get_type_idx<factor>(), get_type_idx<factor>(),
+            factor_factor
+        );
 
-        // TODO
-        lexicographic_compare_table;
+        auto factor_identity = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return -1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<factor>(), get_type_idx<identity>(),
+            factor_identity
+        );
+
+        auto identity_factor = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return 1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<identity>(), get_type_idx<factor>(),
+            identity_factor
+        );
+
+        auto factor_binary_operator = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return -1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<factor>(), get_type_idx<binary_operator>(),
+            factor_binary_operator
+        );
+
+        auto binary_operator_factor = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return 1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<binary_operator>(), get_type_idx<factor>(),
+            binary_operator_factor
+        );
+
+        auto identity_identity = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            const identity *l = static_cast<const identity*>(lhs), *r = static_cast<const identity*>(rhs);
+            int result = 0;
+            node *p = l->expression->next, *q = r->expression->next;
+            for(; ; p = p->next, q = q->next){
+                result = lexicographic_compare(p->value.get(), q->value.get());
+                if(result != 0){ break;; }
+                bool p_phi = !p->next, q_phi = !q->next;
+                if(p_phi || q_phi){
+                    result = p_phi == q_phi ? 0 : p_phi ? -1 : 1;
+                    break;
+                }
+            }
+            return result;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<identity>(), get_type_idx<identity>(),
+            identity_identity
+        );
+
+        auto identity_binary_operator = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return -1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<identity>(), get_type_idx<binary_operator>(),
+            identity_binary_operator
+        );
+
+        auto binary_operator_identity = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            return 1;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<binary_operator>(), get_type_idx<identity>(),
+            binary_operator_identity
+        );
+
+        auto binary_operator_binary_operator = [](const eval_target *lhs, const eval_target *rhs) -> int{
+            const binary_operator *l = static_cast<const binary_operator*>(lhs), *r = static_cast<const binary_operator*>(rhs);
+            if(l->type_sub_idx != r->type_sub_idx){
+                return primitive_compare(l->type_sub_idx, r->type_sub_idx);
+            }
+            const eval_target *l_first_target, *l_second_target, *r_first_target, *r_second_target;
+            if(l->type_sub_idx == binary_operator::type_sub_idx_manager::get_type_idx<bin_division>()){
+                l_first_target = l->rhs.get();
+                l_second_target = l->lhs.get();
+            }else{
+                l_first_target = l->lhs.get();
+                l_second_target = l->rhs.get();
+            }
+            if(r->type_sub_idx == binary_operator::type_sub_idx_manager::get_type_idx<bin_division>()){
+                r_first_target = r->rhs.get();
+                r_second_target = r->lhs.get();
+            }else{
+                r_first_target = r->lhs.get();
+                r_second_target = r->rhs.get();
+            }
+            int result = lexicographic_compare(l_first_target, r_first_target);
+            if(result == 0){ lexicographic_compare(l_second_target, r_second_target); }
+            return result;
+        };
+        lexicographic_compare_table.set(
+            get_type_idx<binary_operator>(), get_type_idx<binary_operator>(),
+            binary_operator_binary_operator
+        );
     }
 } lexicographic_compare_table_initializer_;
 

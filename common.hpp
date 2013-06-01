@@ -73,28 +73,22 @@ namespace poly{
         return idx;
     }
 
-    // 値
-    class eval_target{
-    public:
-        eval_target(std::size_t a_type_idx);
-        virtual ~eval_target();
-        virtual bool equal(const eval_target *other) const;
-        inline bool noteq(const  eval_target *other) const{ return !equal(other); }
-        virtual eval_target *copy() const = 0;
-        virtual void negate() = 0;
-        virtual void complex_conjugate() = 0;
-
-    private:
-        eval_target();
-
-    public:
-        const std::size_t type_idx;
-    };
-
     // 多項式
     struct node{
         node();
-        std::unique_ptr<eval_target> value;
+        ~node();
+        bool equal(const node *ptr) const;
+        node *copy() const;
+        void negate();
+        void complex_conjugate();
+
+        // 指数部
+        std::map<std::string, node*> e;
+
+        //実部, 虚部
+        fpoint real, imag;
+
+        // 次の項
         node *next;
     };
 
@@ -103,14 +97,15 @@ namespace poly{
     void dispose(node *p);
     node *constant(fpoint re, fpoint im);
     node *variable(const std::string &str);
-    node *variable(const std::string &str, fpoint re, fpoint im);
-    node *variable(const std::string &str, eval_target *ptr);
+    node *variable(const std::string &str, fpoint re, fpoint im = 0);
+    node *variable(const std::string &str, node *ptr);
+    int lexicographic_compare(const node *l, const node *r);
     node *copy(node *p);
     void change_sign(node *p);
     void complex_conjugate(node *p);
     void add(node *p, node *q);
     node *multiply(node *x, node *y);
-    node *power(node *x, fpoint n);
+    node *power(node *x, node *n);
     std::string poly_to_string(const node *p);
 }
 

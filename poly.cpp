@@ -185,7 +185,7 @@ node *variable(const std::string &str, node *ptr){
 }
 
 // 多項式をコピー
-node *copy(node *p){
+node *copy(const node *p){
     node *q, *r;
     q = r = new_node();
     while(p = p->next){
@@ -284,9 +284,10 @@ void sub(node *p, node *q){
 }
 
 template<class F>
-node *proto_multiply_divide(node *x, node *y, F f){
+node *proto_multiply_divide(const node *x, const node *y, F f){
     node *ep = nullptr, *eq = nullptr;
-    node *p, *p1, *q, *r, *z;
+    const node *z;
+    node *p, *p1, *q, *r;
     r = new_node(), r->next = nullptr, q = nullptr;
     while(y = y->next){
         p1 = r, p = p1->next, z = x;
@@ -294,9 +295,7 @@ node *proto_multiply_divide(node *x, node *y, F f){
             if(!q){ q = new_node(); }
             q->real = f(z->real, y->real) - f(z->imag, y->imag);
             q->imag = (y->imag == 0 && z->imag == 0 ? 0 : f(z->imag, y->real) + f(z->real, y->imag));
-            //q->real = y->real * z->real - y->imag * z->imag;
-            //q->imag = y->real * z->imag + y->imag * z->real;
-            auto add_pow = [q](node *ptr){
+            auto add_pow = [q](const node *ptr){
                 for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
                     auto jter = q->e.find(iter->first);
                     if(jter == q->e.end()){
@@ -366,13 +365,13 @@ node *proto_multiply_divide(node *x, node *y, F f){
 
 // 乗算
 // 新たな多項式を返す
-node *multiply(node *x, node *y){
+node *multiply(const node *x, const node *y){
     return proto_multiply_divide(x, y, [](fpoint a, fpoint b) -> fpoint{ return a * b; });
 }
 
 // 除算
 // 新たな多項式を返す
-node *divide(node *x, node *y){
+node *divide(const node *x, const node *y){
     node *p = copy(y), *q;
     q = p;
     while(p = p->next){

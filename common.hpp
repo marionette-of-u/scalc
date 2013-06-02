@@ -102,13 +102,13 @@ namespace poly{
     node *variable(const std::string &str, fpoint re, fpoint im = 0);
     node *variable(const std::string &str, node *ptr);
     int lexicographic_compare(const node *l, const node *r);
-    node *copy(node *p);
+    node *copy(const node *p);
     void change_sign(node *p);
     void complex_conjugate(node *p);
     void add(node *p, node *q);
     void sub(node *p, node *q);
-    node *multiply(node *x, node *y);
-    node *divide(node *x, node *y);
+    node *multiply(const node *x, const node *y);
+    node *divide(const node *x, const node *y);
     node *power(node *x, node *n);
     std::string poly_to_string(const node *p);
 }

@@ -86,42 +86,44 @@ int lexicographic_compare(const node *l, const node *r){
     if(l && !r){ return 1; }
     int l_class = factor_class(l), r_class = factor_class(r);
     if(l_class < r_class){ return -1; }else if(l_class > r_class){ return 1; }
-    int result;
-    auto l_iter = l->e.begin(), r_iter = r->e.begin();
-    bool l_phi, r_phi;
-    auto exponent_compare = [&](){
+    auto exponent_compare = [](const exponent_type &l, const exponent_type &r) -> int{
+        int result;
+        auto l_iter = l.begin(), r_iter = r.begin();
+        bool l_phi, r_phi;
         for(; ; ++l_iter, ++r_iter){
-            l_phi = l_iter == l->e.end();
-            r_phi = r_iter == r->e.end();
+            l_phi = l_iter == l.end();
+            r_phi = r_iter == r.end();
             if(l_phi || r_phi){
-                result = l_phi == r_phi ? 0 : l_phi ? -1 : 1;
+                result = l_phi && r_phi ? 0 : l_phi ? -1 : 1;
                 break;
             }
             if(l_iter->first == r_iter->first){
                 result = lexicographic_compare(l_iter->second, r_iter->second);
                 if(result != 0){ break; }
             }else{
-                result = primitive_compare(l_iter->first, r_iter->first);
+                result = -primitive_compare(l_iter->first, r_iter->first);
                 break;
             }
         }
+        return result;
     };
+    int result;
     switch(l_class){
     case 5:
-        exponent_compare();
+        result = exponent_compare(l->e, r->e);
         if(result == 0){ result = primitive_compare(l->real, r->real); }
         if(result == 0){ result = primitive_compare(l->imag, r->imag); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 4:
-        exponent_compare();
+        result = exponent_compare(l->e, r->e);
         if(result == 0){ result = primitive_compare(l->imag, r->imag); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 3:
-        exponent_compare();
+        result = exponent_compare(l->e, r->e);
         if(result == 0){ result = primitive_compare(l->real, r->real); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
@@ -247,25 +249,38 @@ void add(node *p, node *q){
     dispose_node(q1);
     while(q){
         while(p){
-            for(auto p_iter = p->e.begin(); p_iter != p->e.end(); ++p_iter){
-                ep = p_iter->second;
-                auto q_iter = q->e.find(p_iter->first);
-                if(q_iter == q->e.end()){
-                    eq = nullptr;
-                    goto breakpoint;
-                }else{ eq = q_iter->second; }
-                if(lexicographic_compare(ep, eq) != 0){ goto breakpoint; }
-            }
-            for(auto q_iter = q->e.begin(); q_iter != q->e.end(); ++q_iter){
-                eq = q_iter->second;
-                auto p_iter = p->e.find(q_iter->first);
-                if(p_iter != p->e.end()){ continue; }else{
-                    ep = nullptr;
-                    goto breakpoint;
+            int compare_result;
+            auto l_iter = p->e.begin(), r_iter = q->e.begin();
+            bool l_phi, r_phi;
+            for(; ; ++l_iter, ++r_iter){
+                l_phi = l_iter == p->e.end();
+                r_phi = r_iter == q->e.end();
+                if(l_phi || r_phi){
+                    compare_result = l_phi && r_phi ? 0 : l_phi ? -1 : 1;
+                    if(!l_phi){ ep = l_iter->second; }
+                    if(!r_phi){ eq = r_iter->second; }
+                    break;
+                }
+                if(l_iter->first == r_iter->first){
+                    compare_result = lexicographic_compare(l_iter->second, r_iter->second);
+                    if(compare_result != 0){
+                        ep = l_iter->second;
+                        eq = r_iter->second;
+                        break;
+                    }
+                }else{
+                    compare_result = -primitive_compare(l_iter->first, r_iter->first);
+                    if(compare_result < 0){
+                        ep = nullptr;
+                        eq = r_iter->second;
+                    }else{
+                        ep = l_iter->second;
+                        eq = nullptr;
+                    }
+                    break;
                 }
             }
-            breakpoint:;
-            if(lexicographic_compare(ep, eq) <= 0){ break; }
+            if(compare_result <= 0){ break; }
             p1 = p, p = p->next;
         }
         if(!p || lexicographic_compare(ep, eq) < 0){
@@ -386,56 +401,73 @@ node *power(node *x, node *n){
     //return p;
 }
 
+// 式を文字列として得る. 実装
+std::pair<std::string, bool> poly_to_string_impl(const node *p){
+    bool first = true, one, paren = false;
+    fpoint re, im;
+    node *e = nullptr, *c = constant(1);
+    std::string r;
+    while(p = p->next){
+        one = false;
+        re = p->real;
+        im = p->imag;
+        if(im == 0){
+            if(re >= 0){
+                if(!first){
+                    r += "+";
+                    paren = true;
+                }
+            }else{
+                re = -re;
+                r += "-";
+                paren = true;
+            }
+            if(re == 1){ one = true; }else{ r += to_string(re); }
+        }else if(re == 0){
+            if(im >= 0){
+                if(!first){
+                    r += "+";
+                    paren = true;
+                }
+            }else{
+                im = -im;
+                r += "-";
+                paren = true;
+            }
+            r += (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
+        }else{
+            if(!first){
+                r += "+";
+            }
+            bool nega;
+            if(nega = im < 0){
+                im = -im;
+            }
+            r += to_string(re) + (nega ? "-" : "+") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
+            paren = true;
+        }
+        first = false;
+        for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
+            if(e = iter->second){
+                if(!one){ r += "*"; }
+                one = false;
+                r += iter->first;
+                if(lexicographic_compare(e, c)){
+                    std::pair<std::string, bool> s = poly_to_string_impl(e);
+                    r += "^" + std::string(s.second ? "(" : "") + s.first + std::string(s.second ? ")" : "");
+                }
+            }
+        }
+        if(one){ r += "1"; }
+    }
+    if(first){ r += "0"; }
+    dispose(c);
+    return std::make_pair(r, paren);
+}
+
 // 式を文字列として得る
 std::string poly_to_string(const node *p){
-    return "";
-    //bool first, one;
-    //c_type re, im;
-    //e_type e;
-    //std::string r;
-
-    //first = true;
-    //while(p = p->next){
-    //    one = false;
-    //    re = p->real;
-    //    im = p->imag;
-    //    if(im == 0){
-    //        if(re >= 0){
-    //            if(!first){ r += "+"; }
-    //        }else{
-    //            re = -re;
-    //            r += "-";
-    //        }
-    //        if(re == 1){ one = true; }else{ r += to_string(re); }
-    //    }else if(re == 0){
-    //        if(im >= 0){
-    //            if(!first){ r += "+"; }
-    //        }else{
-    //            im = -im;
-    //            r += "-";
-    //        }
-    //        r += (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
-    //    }else{
-    //        if(!first){ r += "+"; }
-    //        bool nega;
-    //        if(nega = im < 0){ im = -im; }
-    //        r += to_string(re) + (nega ? "-" : "+") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
-    //    }
-    //    first = false;
-    //    for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
-    //        if((e = iter->second) != 0){
-    //            if(!one){ r += "*"; }
-    //            one = false;
-    //            r += iter->first;
-    //            if(e != 1){
-    //                r += "^" + to_string(e);
-    //            }
-    //        }
-    //    }
-    //    if(one){ r += "1"; }
-    //}
-    //if(first){ r += "0"; }
-    //return r;
+    return poly_to_string_impl(p).first;
 }
 
 }

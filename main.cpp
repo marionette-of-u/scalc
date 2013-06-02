@@ -382,38 +382,44 @@ int main(){
         using namespace poly;
         node *x;
         {
-            node *a = variable("x", 3);
+            node *a = variable("x", 1, 3);
             {
-                node *b = variable("x", 2), *c = variable("x", 1);
+                node *b = variable("x", 0, 2), *c = variable("x", 0, 1);
                 add(b, c);
                 add(a, b);
             }
             {
-                node *b = variable("y", 3), *c = variable("y", 1);
+                node *b = variable("y", 0, 3), *c = variable("y", 0, 2);
                 add(b, c);
                 add(a, b);
             }
             x = variable("a", a);
         }
+        
         node *x_;
         {
-            node *a = variable("x", 3);
+            node *a = variable("x", 1, 3);
             {
-                node *b = variable("y", 3), *c = variable("y", 2);
+                node *b = variable("y", 0, 3), *c = variable("y", 0, 2);
                 add(b, c);
                 add(a, b);
             }
             {
-                node *b = variable("x", 2), *c = variable("x", 1);
+                node *b = variable("x", 0, 2), *c = variable("x", 0, 1);
                 add(b, c);
                 add(a, b);
             }
             x_ = variable("a", a);
         }
-        int r = lexicographic_compare(x, x_);
-        std::cout << r << std::endl;
-        dispose(x);
-        dispose(x_);
+        
+        {
+            std::cout << poly_to_string(x) << std::endl;
+            std::cout << poly_to_string(x_) << std::endl;
+            std::cout << lexicographic_compare(x, x_) << std::endl;;
+            add(x, x_);
+            std::cout << poly_to_string(x) << std::endl;
+            dispose(x);
+        }
     }
 
     return 0;

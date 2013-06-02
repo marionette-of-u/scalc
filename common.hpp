@@ -73,6 +73,9 @@ namespace poly{
         return idx;
     }
 
+    struct node;
+    typedef std::map<std::string, node*> exponent_type;
+
     // 多項式
     struct node{
         node();
@@ -83,7 +86,7 @@ namespace poly{
         void complex_conjugate();
 
         // 指数部
-        std::map<std::string, node*> e;
+        exponent_type e;
 
         //実部, 虚部
         fpoint real, imag;
@@ -95,7 +98,7 @@ namespace poly{
     node *new_node();
     void dispose_node(node *p);
     void dispose(node *p);
-    node *constant(fpoint re, fpoint im);
+    node *constant(fpoint re, fpoint im = 0);
     node *variable(const std::string &str);
     node *variable(const std::string &str, fpoint re, fpoint im = 0);
     node *variable(const std::string &str, node *ptr);

@@ -81,7 +81,6 @@ namespace poly{
         node();
         ~node();
         bool equal(const node *ptr) const;
-        node *copy() const;
         void negate();
         void complex_conjugate();
 

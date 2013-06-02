@@ -32,16 +32,6 @@ bool node::equal(const node *ptr) const{
     return true;
 }
 
-node *node::copy() const{
-    node *other = new node;
-    other->real = real;
-    other->imag = imag;
-    for(auto iter = e.begin(); iter != e.end(); ++iter){
-        other->e.insert(std::make_pair(iter->first, poly::copy(iter->second)));
-    }
-    return other;
-}
-
 void node::negate(){
     real = -real, imag = -imag;
 }

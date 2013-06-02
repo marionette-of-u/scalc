@@ -292,6 +292,13 @@ void add(node *p, node *q){
     }
 }
 
+// 減算
+// qは破棄
+void sub(node *p, node *q){
+    change_sign(q);
+    add(p, q);
+}
+
 // 乗算
 // 新たな多項式を返す
 node *multiply(node *x, node *y){
@@ -355,7 +362,7 @@ node *multiply(node *x, node *y){
                 if(compare_result <= 0){ break; }
                 p1 = p, p = p->next;
             }
-            if(!p || lexicographic_compare(ep, eq)){
+            if(!p || lexicographic_compare(ep, eq) < 0){
                 p1->next = q, p1 = q, p1->next = p;
                 q = nullptr;
             }else{

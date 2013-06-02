@@ -383,6 +383,7 @@ int main(){
         node *x;
         {
             node *a = variable("x", 1, 3);
+            add(a, variable("x"));
             {
                 node *b = variable("x", 0, 2), *c = variable("x", 0, 1);
                 add(b, c);
@@ -399,6 +400,7 @@ int main(){
         node *x_;
         {
             node *a = variable("x", 1, 3);
+            add(a, variable("x"));
             {
                 node *b = variable("y", 0, 3), *c = variable("y", 0, 2);
                 add(b, c);
@@ -415,12 +417,10 @@ int main(){
         std::cout << poly_to_string(x) << std::endl;
         std::cout << poly_to_string(x_) << std::endl;
 
-        node *y = multiply(x, x_);
-        std::cout << poly_to_string(y) << std::endl;
+        sub(x, x_);
+        std::cout << poly_to_string(x) << std::endl;
 
         dispose(x);
-        dispose(x_);
-        dispose(y);
     }
 
     return 0;

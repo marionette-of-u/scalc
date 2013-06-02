@@ -106,6 +106,7 @@ namespace poly{
     void change_sign(node *p);
     void complex_conjugate(node *p);
     void add(node *p, node *q);
+    void sub(node *p, node *q);
     node *multiply(node *x, node *y);
     node *power(node *x, node *n);
     std::string poly_to_string(const node *p);

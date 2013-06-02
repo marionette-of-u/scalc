@@ -1,5 +1,4 @@
-﻿#include <iostream>
-#include <functional>
+﻿#include <functional>
 #include <vector>
 #include <map>
 #include <memory>
@@ -417,10 +416,15 @@ int main(){
         std::cout << poly_to_string(x) << std::endl;
         std::cout << poly_to_string(x_) << std::endl;
 
-        sub(x, x_);
-        std::cout << poly_to_string(x) << std::endl;
+        node *y = divide(x, x_);
+        node *z = divide(y, x);
+        std::cout << poly_to_string(y) << std::endl;
+        std::cout << poly_to_string(z) << std::endl;
 
         dispose(x);
+        dispose(x_);
+        dispose(y);
+        dispose(z);
     }
 
     return 0;

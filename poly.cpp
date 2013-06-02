@@ -16,22 +16,6 @@ node::~node(){
     }
 }
 
-bool node::equal(const node *ptr) const{
-    if(real != ptr->real || imag != ptr->imag){
-        return false;
-    }
-    for(auto iter = e.begin(); iter != e.end(); ++iter){
-        auto jter = ptr->e.find(iter->first);
-        if(jter == ptr->e.end() || !iter->second->equal(jter->second)){
-            return false;
-        }
-    }
-    for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
-        if(e.find(iter->first) == e.end()){ return false; }
-    }
-    return true;
-}
-
 void node::negate(){
     real = -real, imag = -imag;
 }
@@ -311,22 +295,19 @@ node *multiply(node *x, node *y){
             if(!q){ q = new_node(); }
             q->real = y->real * z->real - y->imag * z->imag;
             q->imag = y->real * z->imag + y->imag * z->real;
-            for(auto iter = y->e.begin(); iter != y->e.end(); ++iter){
-                auto jter = q->e.find(iter->first);
-                if(jter == q->e.end()){
-                    q->e.insert(std::make_pair(iter->first, copy(iter->second)));
-                }else{
-                    add(jter->second, copy(iter->second));
+            auto add_pow = [q](node *ptr){
+                for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
+                    auto jter = q->e.find(iter->first);
+                    if(jter == q->e.end()){
+                        q->e.insert(std::make_pair(iter->first, copy(iter->second)));
+                    }else{
+                        add(jter->second, copy(iter->second));
+                        if(!jter->second->next){ q->e.erase(jter); }
+                    }
                 }
-            }
-            for(auto iter = z->e.begin(); iter != z->e.end(); ++iter){
-                auto jter = q->e.find(iter->first);
-                if(jter == q->e.end()){
-                    q->e.insert(std::make_pair(iter->first, copy(iter->second)));
-                }else{
-                    add(jter->second, copy(iter->second));
-                }
-            }
+            };
+            add_pow(y);
+            add_pow(z);
             while(p){
                 int compare_result;
                 auto l_iter = p->e.begin(), r_iter = q->e.begin();
@@ -379,6 +360,20 @@ node *multiply(node *x, node *y){
         }
     }
     if(q){ dispose_node(q); }
+    return r;
+}
+
+// 除算
+node *divide(node *x, node *y){
+    node *p = copy(y), *q;
+    q = p;
+    while(p = p->next){
+        for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
+            change_sign(iter->second);
+        }
+    }
+    node *r = multiply(x, q);
+    dispose(q);
     return r;
 }
 
@@ -461,9 +456,7 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p){
                 r += "+";
             }
             bool nega;
-            if(nega = im < 0){
-                im = -im;
-            }
+            if(nega = im < 0){ im = -im; }
             r += to_string(re) + (nega ? "-" : "+") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
             paren = true;
         }

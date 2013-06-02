@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <typeinfo>
+#include <iostream>
 
 typedef double fpoint;
 
@@ -80,7 +81,6 @@ namespace poly{
     struct node{
         node();
         ~node();
-        bool equal(const node *ptr) const;
         void negate();
         void complex_conjugate();
 
@@ -108,6 +108,7 @@ namespace poly{
     void add(node *p, node *q);
     void sub(node *p, node *q);
     node *multiply(node *x, node *y);
+    node *divide(node *x, node *y);
     node *power(node *x, node *n);
     std::string poly_to_string(const node *p);
 }

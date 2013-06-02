@@ -283,9 +283,8 @@ void sub(node *p, node *q){
     add(p, q);
 }
 
-// 乗算
-// 新たな多項式を返す
-node *multiply(node *x, node *y){
+template<class F>
+node *proto_multiply_divide(node *x, node *y, F f){
     node *ep = nullptr, *eq = nullptr;
     node *p, *p1, *q, *r, *z;
     r = new_node(), r->next = nullptr, q = nullptr;
@@ -293,8 +292,10 @@ node *multiply(node *x, node *y){
         p1 = r, p = p1->next, z = x;
         while(z = z->next){
             if(!q){ q = new_node(); }
-            q->real = y->real * z->real - y->imag * z->imag;
-            q->imag = y->real * z->imag + y->imag * z->real;
+            q->real = f(z->real, y->real) - f(z->imag, y->imag);
+            q->imag = (y->imag == 0 && z->imag == 0 ? 0 : f(z->imag, y->real) + f(z->real, y->imag));
+            //q->real = y->real * z->real - y->imag * z->imag;
+            //q->imag = y->real * z->imag + y->imag * z->real;
             auto add_pow = [q](node *ptr){
                 for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
                     auto jter = q->e.find(iter->first);
@@ -363,7 +364,14 @@ node *multiply(node *x, node *y){
     return r;
 }
 
+// 乗算
+// 新たな多項式を返す
+node *multiply(node *x, node *y){
+    return proto_multiply_divide(x, y, [](fpoint a, fpoint b) -> fpoint{ return a * b; });
+}
+
 // 除算
+// 新たな多項式を返す
 node *divide(node *x, node *y){
     node *p = copy(y), *q;
     q = p;
@@ -372,7 +380,7 @@ node *divide(node *x, node *y){
             change_sign(iter->second);
         }
     }
-    node *r = multiply(x, q);
+    node *r = proto_multiply_divide(x, q, [](fpoint a, fpoint b) -> fpoint{ return a == 0 && b == 0 ? 0 : a / b; });
     dispose(q);
     return r;
 }

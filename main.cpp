@@ -416,15 +416,16 @@ int main(){
         std::cout << poly_to_string(x) << std::endl;
         std::cout << poly_to_string(x_) << std::endl;
 
-        node *y = divide(x, x_);
-        node *z = divide(y, x);
-        std::cout << poly_to_string(y) << std::endl;
-        std::cout << poly_to_string(z) << std::endl;
+        node *c_a = constant(1.5);
+        node *c_b = constant(0.5);
+        node *c_c = divide(divide(x, c_a), x_);
+        std::cout << poly_to_string(c_c) << std::endl;
 
         dispose(x);
         dispose(x_);
-        dispose(y);
-        dispose(z);
+        dispose(c_a);
+        dispose(c_b);
+        dispose(c_c);
     }
 
     return 0;

@@ -34,11 +34,11 @@ bool node::equal(const node *ptr) const{
 
 node *node::copy() const{
     node *other = new node;
-    for(auto iter = e.begin(); iter != e.end(); ++iter){
-        other->e[iter->first] = iter->second->copy();
-    }
     other->real = real;
     other->imag = imag;
+    for(auto iter = e.begin(); iter != e.end(); ++iter){
+        other->e.insert(std::make_pair(iter->first, poly::copy(iter->second)));
+    }
     return other;
 }
 
@@ -219,7 +219,7 @@ node *copy(node *p){
         r->real = p->real;
         r->imag = p->imag;
         for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
-            r->e[iter->first] = iter->second->copy();
+            r->e.insert(std::make_pair(iter->first, copy(iter->second)));
         }
     }
     return q;
@@ -305,60 +305,84 @@ void add(node *p, node *q){
 // 乗算
 // 新たな多項式を返す
 node *multiply(node *x, node *y){
-    return nullptr;
-    //e_type ep = 0, eq = 0;
-    //node *p, *p1, *q, *r, *z;
-    //r = new_node(), q = nullptr;
-    //while(y = y->next){
-    //    p1 = r, p = p1->next, z = x;
-    //    while(z = z->next){
-    //        if(!q){ q = new_node(); }
-    //        q->real = y->real * z->real - y->imag * z->imag;
-    //        q->imag = y->real * z->imag + y->imag * z->real;
-    //        q->e = y->e;
-    //        for(auto iter = z->e.begin(); iter != z->e.end(); ++iter){
-    //            q->e[iter->first] += iter->second;
-    //        }
-    //        while(p){
-    //            for(auto p_iter = p->e.begin(); p_iter != p->e.end(); ++p_iter){
-    //                ep = p_iter->second;
-    //                auto q_iter = q->e.find(p_iter->first);
-    //                if(q_iter == q->e.end()){
-    //                    eq = 0;
-    //                    goto breakpoint;
-    //                }else{ eq = q_iter->second; }
-    //                if(ep != eq){ goto breakpoint; }
-    //            }
-    //            for(auto q_iter = q->e.begin(); q_iter != q->e.end(); ++q_iter){
-    //                eq = q_iter->second;
-    //                auto p_iter = p->e.find(q_iter->first);
-    //                if(p_iter != p->e.end()){ continue; }else{
-    //                    ep = 0;
-    //                    goto breakpoint;
-    //                }
-    //            }
-    //            breakpoint:;
-    //            if(ep <= eq){ break; }
-    //            p1 = p, p = p->next;
-    //        }
-    //        if(p == nullptr || ep < eq){
-    //            p1->next = q, p1 = q, p1->next = p;
-    //            q = nullptr;
-    //        }else{
-    //            p->real += q->real;
-    //            p->imag += q->imag;
-    //            if(p->real != 0 || p->imag != 0){
-    //                p1 = p, p = p->next;
-    //            }else{
-    //                p = p->next;
-    //                dispose_node(p1->next);
-    //                p1->next = p;
-    //            }
-    //        }
-    //    }
-    //}
-    //if(q){ dispose_node(q); }
-    //return r;
+    node *ep = nullptr, *eq = nullptr;
+    node *p, *p1, *q, *r, *z;
+    r = new_node(), r->next = nullptr, q = nullptr;
+    while(y = y->next){
+        p1 = r, p = p1->next, z = x;
+        while(z = z->next){
+            if(!q){ q = new_node(); }
+            q->real = y->real * z->real - y->imag * z->imag;
+            q->imag = y->real * z->imag + y->imag * z->real;
+            for(auto iter = y->e.begin(); iter != y->e.end(); ++iter){
+                auto jter = q->e.find(iter->first);
+                if(jter == q->e.end()){
+                    q->e.insert(std::make_pair(iter->first, copy(iter->second)));
+                }else{
+                    add(jter->second, copy(iter->second));
+                }
+            }
+            for(auto iter = z->e.begin(); iter != z->e.end(); ++iter){
+                auto jter = q->e.find(iter->first);
+                if(jter == q->e.end()){
+                    q->e.insert(std::make_pair(iter->first, copy(iter->second)));
+                }else{
+                    add(jter->second, copy(iter->second));
+                }
+            }
+            while(p){
+                int compare_result;
+                auto l_iter = p->e.begin(), r_iter = q->e.begin();
+                bool l_phi, r_phi;
+                for(; ; ++l_iter, ++r_iter){
+                    l_phi = l_iter == p->e.end();
+                    r_phi = r_iter == q->e.end();
+                    if(l_phi || r_phi){
+                        compare_result = l_phi && r_phi ? 0 : l_phi ? -1 : 1;
+                        if(!l_phi){ ep = l_iter->second; }
+                        if(!r_phi){ eq = r_iter->second; }
+                        break;
+                    }
+                    if(l_iter->first == r_iter->first){
+                        compare_result = lexicographic_compare(l_iter->second, r_iter->second);
+                        if(compare_result != 0){
+                            ep = l_iter->second;
+                            eq = r_iter->second;
+                            break;
+                        }
+                    }else{
+                        compare_result = -primitive_compare(l_iter->first, r_iter->first);
+                        if(compare_result < 0){
+                            ep = nullptr;
+                            eq = r_iter->second;
+                        }else{
+                            ep = l_iter->second;
+                            eq = nullptr;
+                        }
+                        break;
+                    }
+                }
+                if(compare_result <= 0){ break; }
+                p1 = p, p = p->next;
+            }
+            if(!p || lexicographic_compare(ep, eq)){
+                p1->next = q, p1 = q, p1->next = p;
+                q = nullptr;
+            }else{
+                p->real += q->real;
+                p->imag += q->imag;
+                if(p->real != 0 || p->imag != 0){
+                    p1 = p, p = p->next;
+                }else{
+                    p = p->next;
+                    dispose_node(p1->next);
+                    p1->next = p;
+                }
+            }
+        }
+    }
+    if(q){ dispose_node(q); }
+    return r;
 }
 
 // 累乗

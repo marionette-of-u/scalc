@@ -411,15 +411,16 @@ int main(){
             }
             x_ = variable("a", a);
         }
-        
-        {
-            std::cout << poly_to_string(x) << std::endl;
-            std::cout << poly_to_string(x_) << std::endl;
-            std::cout << lexicographic_compare(x, x_) << std::endl;;
-            add(x, x_);
-            std::cout << poly_to_string(x) << std::endl;
-            dispose(x);
-        }
+
+        std::cout << poly_to_string(x) << std::endl;
+        std::cout << poly_to_string(x_) << std::endl;
+
+        node *y = multiply(x, x_);
+        std::cout << poly_to_string(y) << std::endl;
+
+        dispose(x);
+        dispose(x_);
+        dispose(y);
     }
 
     return 0;

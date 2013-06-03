@@ -379,52 +379,18 @@ int main(){
 
     {
         using namespace poly;
-        node *x;
-        {
-            node *a = variable("x", 1, 3);
-            add(a, variable("x"));
-            {
-                node *b = variable("x", 0, 2), *c = variable("x", 0, 1);
-                add(b, c);
-                add(a, b);
-            }
-            {
-                node *b = variable("y", 0, 3), *c = variable("y", 0, 2);
-                add(b, c);
-                add(a, b);
-            }
-            x = variable("a", a);
-        }
-        
-        node *x_;
-        {
-            node *a = variable("x", 1, 3);
-            add(a, variable("x"));
-            {
-                node *b = variable("y", 0, 3), *c = variable("y", 0, 2);
-                add(b, c);
-                add(a, b);
-            }
-            {
-                node *b = variable("x", 0, 2), *c = variable("x", 0, 1);
-                add(b, c);
-                add(a, b);
-            }
-            x_ = variable("a", a);
-        }
-        add(x_, constant(0.25, 1));
-        add(x, x_);
-        std::cout << poly_to_string(x) << std::endl;
-        dispose(x);
+        node *n = new_node(), *m = new_node();
+        add(n, variable("x", variable("y", variable("z"))));
+        node *o = power(n, variable("x", variable("y", variable("w"))));
+        std::cout << poly_to_string(o) << std::endl;
+    }
 
-        node *c_a = constant(1.5, 0.5);
-        node *c_b = constant(0.5, 1.5);
-        node *c_c = divide(c_a, c_b);
-        std::cout << poly_to_string(c_c) << std::endl;
-
-        dispose(c_a);
-        dispose(c_b);
-        dispose(c_c);
+    {
+        using namespace poly;
+        node *n = new_node(), *m = new_node();
+        add(n, variable("x", variable("y", variable("z"))));
+        node *o = power(n, constant(0, 9));
+        std::cout << poly_to_string(o) << std::endl;
     }
 
     return 0;

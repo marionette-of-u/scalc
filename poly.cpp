@@ -408,14 +408,90 @@ node *divide(const node *x, const node *y){
     return r;
 }
 
-// 累乗
-// xは破棄する
-node *power(node *x, node *n){
-    return nullptr;
+// x^n
+node *power(node *x, node *y){
+    // node: combination of operands
+    // --------
+    // symbol     = 0
+    // constant   = 1
+    // expression = 2
+    // --------
+    // symbol^symbol     -> symbol^symbol
+    // symbol^constant   -> symbol^constant
+    // symbol^expression -> symbol^a_1 * ... * symbol^a_n
+    // --------
+    // constant^symbol     -> constant^symbol
+    // constant^constant   -> constant^constant
+    // constant^expression -> constant^a_1 * ... * constant^a_n
+    // --------
+    // expression^symbol     -> ERROR
+    // expression^constant   -> (ans...)
+    // expression^expression -> ERROR
+    auto kind = [](const node *p) -> int{
+        p = p->next;
+        if(!p->next){
+            if((p->real != 0 && p->imag == 0) || (p->real == 0 && p->imag != 0)){
+                if(!p->e.empty()){
+                    return 0;
+                }else{
+                    return 1;
+                }
+            }
+        }
+        return 2;
+    };
+
+    std::function<node*(node*, node*)> common_a = [](node *p, node *q) -> node*{
+        node *r = constant(1), *s = r;
+        p = p->next;
+        r = r->next;
+        for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
+            r->e.insert(std::make_pair(iter->first, multiply(iter->second, q)));
+        }
+        return s;
+    };
+
+    std::function<node*(node*, node*)> function_table[3][3] = {
+        {
+            common_a,
+            common_a,
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            }
+        },
+        {
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            }, 
+
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            },
+
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            }
+        },
+        {
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            },
+
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            },
+
+            [](node *p, node *q) -> node*{
+                return nullptr;
+            }
+        }
+    };
+
+    return function_table[kind(x)][kind(y)](x, y);
 }
 
 // 式を文字列として得る. 実装
-std::pair<std::string, bool> poly_to_string_impl(const node *p){
+std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren = false){
     bool first = true, one, paren = false;
     fpoint re, im;
     node *e = nullptr, *c = constant(1);
@@ -460,11 +536,14 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p){
         first = false;
         for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
             if(e = iter->second){
-                if(!one){ r += "*"; }
+                if(!one){
+                    r += "*";
+                    if(ext_paren){ paren = true; }
+                }
                 one = false;
                 r += iter->first;
                 if(lexicographic_compare(e, c) != 0){
-                    std::pair<std::string, bool> s = poly_to_string_impl(e);
+                    std::pair<std::string, bool> s = poly_to_string_impl(e, true);
                     r += "^" + std::string(s.second ? "(" : "") + s.first + std::string(s.second ? ")" : "");
                 }
             }

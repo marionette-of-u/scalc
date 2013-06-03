@@ -293,8 +293,7 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
         p1 = r, p = p1->next, z = x;
         while(z = z->next){
             if(!q){ q = new_node(); }
-            q->real = f(z->real, y->real) - f(z->imag, y->imag);
-            q->imag = (y->imag == 0 && z->imag == 0 ? 0 : f(z->imag, y->real) + f(z->real, y->imag));
+            f(q, z, y);
             auto add_pow = [q](const node *ptr){
                 for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
                     auto jter = q->e.find(iter->first);
@@ -366,7 +365,13 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
 // 乗算
 // 新たな多項式を返す
 node *multiply(const node *x, const node *y){
-    return proto_multiply_divide(x, y, [](fpoint a, fpoint b) -> fpoint{ return a * b; });
+    return proto_multiply_divide(
+        x, y,
+        [](node *q, const node *y, const node *z) -> void{
+            q->real = y->real * z->real - y->imag * z->imag;
+            q->imag = y->real * z->imag + y->imag * z->real;
+        }
+    );
 }
 
 // 除算
@@ -379,7 +384,26 @@ node *divide(const node *x, const node *y){
             change_sign(iter->second);
         }
     }
-    node *r = proto_multiply_divide(x, q, [](fpoint a, fpoint b) -> fpoint{ return a == 0 && b == 0 ? 0 : a / b; });
+    node *r = proto_multiply_divide(
+        x, q,
+        [](node *q, const node *y, const node *z) -> void{
+            if(y->imag == 0 && z->imag == 0){
+                q->real = y->real / z->real;
+                q->imag = 0;
+            }else{
+                fpoint w, d;
+                if(std::fabs(z->real) >= std::fabs(z->imag)){
+                    w = z->imag / z->real, d = z->real + z->imag * w;
+                    q->real = (y->real + y->imag * w) / d;
+                    q->imag = (y->imag - y->real * w) / d;
+                }else{
+                    w = z->real / z->imag, d = z->real * w + z->imag;
+                    q->real = (y->real * w + y->imag) / d;
+                    q->imag = (y->imag * w - y->real) / d;
+                }
+            }
+        }
+    );
     dispose(q);
     return r;
 }
@@ -388,40 +412,6 @@ node *divide(const node *x, const node *y){
 // xは破棄する
 node *power(node *x, node *n){
     return nullptr;
-    //if(n == 1){ return x; }
-    //node *p, *q;
-    //if(n == 0){
-    //    p = constant(1, 0);
-    //}else if(n > 0){
-    //    e_type i = std::floor(n), f = n - i;
-    //    if(f == 0){
-    //        p = multiply(x, x), i -= 2;
-    //        if(n > 0){
-    //            q = p;
-    //            if(std::fmod(i, 2.0) == 1){
-    //                p = multiply(q, x);
-    //            }else{
-    //                p = copy(q);
-    //            }
-    //            dispose(x), x = q, i = std::floor(i / 2);
-    //            if(std::fmod(i, 2.0) == 1){
-    //                q = multiply(p, x), dispose(p), p = q;
-    //            }
-    //            while((i = std::floor(i / 2)) != 0){
-    //                q = multiply(x, x), dispose(x), x = q;
-    //                if(std::fmod(i, 2.0) == 1){
-    //                    q = multiply(p, x), dispose(p), p = q;
-    //                }
-    //            }
-    //        }
-    //    }else{
-    //        p = nullptr;// TODO f
-    //    }
-    //}else{
-    //    p = nullptr; // TODO n < 0
-    //}
-    //dispose(x);
-    //return p;
 }
 
 // 式を文字列として得る. 実装
@@ -473,7 +463,7 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p){
                 if(!one){ r += "*"; }
                 one = false;
                 r += iter->first;
-                if(lexicographic_compare(e, c)){
+                if(lexicographic_compare(e, c) != 0){
                     std::pair<std::string, bool> s = poly_to_string_impl(e);
                     r += "^" + std::string(s.second ? "(" : "") + s.first + std::string(s.second ? ")" : "");
                 }

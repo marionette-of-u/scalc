@@ -412,17 +412,16 @@ int main(){
             }
             x_ = variable("a", a);
         }
-
+        add(x_, constant(0.25, 1));
+        add(x, x_);
         std::cout << poly_to_string(x) << std::endl;
-        std::cout << poly_to_string(x_) << std::endl;
+        dispose(x);
 
-        node *c_a = constant(1.5);
-        node *c_b = constant(0.5);
-        node *c_c = divide(divide(x, c_a), x_);
+        node *c_a = constant(1.5, 0.5);
+        node *c_b = constant(0.5, 1.5);
+        node *c_c = divide(c_a, c_b);
         std::cout << poly_to_string(c_c) << std::endl;
 
-        dispose(x);
-        dispose(x_);
         dispose(c_a);
         dispose(c_b);
         dispose(c_c);

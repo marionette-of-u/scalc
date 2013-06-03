@@ -430,7 +430,7 @@ node *power(node *x, node *y){
     auto kind = [](const node *p) -> int{
         p = p->next;
         if(!p->next){
-            if((p->real != 0 && p->imag == 0) || (p->real == 0 && p->imag != 0)){
+            if(p->real != 0 || p->imag != 0){
                 if(!p->e.empty()){
                     return 0;
                 }else{
@@ -530,7 +530,9 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
             }
             bool nega;
             if(nega = im < 0){ im = -im; }
-            r += to_string(re) + (nega ? "-" : "+") + (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
+            if(ext_paren){ r += "("; }
+            r += (to_string(re) + (nega ? "-" : "+") + (im == 1 ? std::string("i") : to_string(im)) + "i");
+            if(ext_paren){ r += ")"; }
             paren = true;
         }
         first = false;

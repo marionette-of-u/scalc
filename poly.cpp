@@ -577,10 +577,14 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
             r += (std::abs(im) == 1 ? std::string("") : to_string(im)) + "i";
         }else{
             if(!first){
-                r += "+";
+                if(re > 0){ r += "+"; }else{ r += "-"; }
             }
             bool nega;
             if(nega = im < 0){ im = -im; }
+            if(re < 0){
+                nega = !nega;
+                re = -re;
+            }
             r += "(";
             r += (to_string(re) + (nega ? "-" : "+") + (im == 1 ? std::string("i") : to_string(im)) + "i");
             r += ")";

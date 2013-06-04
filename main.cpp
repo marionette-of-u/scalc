@@ -372,8 +372,7 @@ int main(){
         eval_target *root = nullptr;
         if(!p.accept(root)){
             std::cout << "parsing error.";
-            return 0;
-        }
+            return 0;}
         std::string r = root->ast_str();
     }
 
@@ -390,6 +389,14 @@ int main(){
         node *n = new_node(), *m = new_node();
         add(n, variable("x", variable("y", variable("z"))));
         node *o = power(n, constant(0, 1));
+        std::cout << poly_to_string(o) << std::endl;
+    }
+
+    {
+        using namespace poly;
+        node *n = constant(2.2, 3.3), *m = constant(3);
+        add(n, variable("x"));
+        node *o = power(n, m);
         std::cout << poly_to_string(o) << std::endl;
     }
 

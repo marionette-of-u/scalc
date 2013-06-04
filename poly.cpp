@@ -288,13 +288,14 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
     node *ep = nullptr, *eq = nullptr;
     const node *z;
     node *p, *p1, *q, *r;
-    r = new_node(), r->next = nullptr, q = nullptr;
+    r = new_node(), q = nullptr;
     while(y = y->next){
         p1 = r, p = p1->next, z = x;
         while(z = z->next){
-            if(!q){ q = new_node(); }
-            f(q, z, y);
-            auto add_pow = [q](const node *ptr){
+            dispose_node(q);
+            q = new_node();
+            f(q, y, z);
+            auto add_exponent = [q](const node *ptr){
                 for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
                     auto jter = q->e.find(iter->first);
                     if(jter == q->e.end()){
@@ -305,19 +306,16 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
                     }
                 }
             };
-            add_pow(y);
-            add_pow(z);
+            add_exponent(y);
+            add_exponent(z);
+            int compare_result;
             while(p){
-                int compare_result;
-                auto l_iter = p->e.begin(), r_iter = q->e.begin();
-                bool l_phi, r_phi;
-                for(; ; ++l_iter, ++r_iter){
-                    l_phi = l_iter == p->e.end();
-                    r_phi = r_iter == q->e.end();
+                for(auto l_iter = p->e.begin(), r_iter = q->e.begin(); ; ++l_iter, ++r_iter){
+                    bool l_phi = l_iter == p->e.end(), r_phi = r_iter == q->e.end();
                     if(l_phi || r_phi){
                         compare_result = l_phi && r_phi ? 0 : l_phi ? -1 : 1;
-                        if(!l_phi){ ep = l_iter->second; }
-                        if(!r_phi){ eq = r_iter->second; }
+                        if(!l_phi){ ep = l_iter->second; }else{ ep = nullptr; }
+                        if(!r_phi){ eq = r_iter->second; }else{ eq = nullptr; }
                         break;
                     }
                     if(l_iter->first == r_iter->first){
@@ -326,6 +324,9 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
                             ep = l_iter->second;
                             eq = r_iter->second;
                             break;
+                        }else{
+                            ep = nullptr;
+                            eq = nullptr;
                         }
                     }else{
                         compare_result = -primitive_compare(l_iter->first, r_iter->first);
@@ -342,7 +343,7 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
                 if(compare_result <= 0){ break; }
                 p1 = p, p = p->next;
             }
-            if(!p || lexicographic_compare(ep, eq) < 0){
+            if(!p || compare_result < 0){
                 p1->next = q, p1 = q, p1->next = p;
                 q = nullptr;
             }else{
@@ -386,7 +387,7 @@ node *divide(const node *x, const node *y){
     }
     node *r = proto_multiply_divide(
         x, q,
-        [](node *q, const node *y, const node *z) -> void{
+        [](node *q, const node *z, const node *y) -> void{
             if(y->imag == 0 && z->imag == 0){
                 q->real = y->real / z->real;
                 q->imag = 0;
@@ -410,23 +411,9 @@ node *divide(const node *x, const node *y){
 
 // x^n
 node *power(node *x, node *y){
-    // node: combination of operands
-    // --------
     // symbol     = 0
     // constant   = 1
     // expression = 2
-    // --------
-    // symbol^symbol     -> symbol^symbol
-    // symbol^constant   -> symbol^constant
-    // symbol^expression -> symbol^a_1 * ... * symbol^a_n
-    // --------
-    // constant^symbol     -> constant^symbol
-    // constant^constant   -> constant^constant
-    // constant^expression -> constant^a_1 * ... * constant^a_n
-    // --------
-    // expression^symbol     -> ERROR
-    // expression^constant   -> (ans...)
-    // expression^expression -> ERROR
     auto kind = [](const node *p) -> int{
         p = p->next;
         if(!p->next){
@@ -452,36 +439,100 @@ node *power(node *x, node *y){
     };
 
     std::function<node*(node*, node*)> function_table[3][3] = {
+        // symbol^symbol     -> accept
+        // symbol^constant   -> accept
+        // symbol^polynomial -> accept
+        { common_a, common_a, common_a },
+
+        // constant^symbol     -> reject
+        // constant^constant   -> calc
+        // constant^polynomial -> reject
         {
-            common_a,
-            common_a,
             [](node *p, node *q) -> node*{
-                return nullptr;
-            }
-        },
-        {
-            [](node *p, node *q) -> node*{
+                throw(error("reject, constant^symbol."));
                 return nullptr;
             }, 
 
             [](node *p, node *q) -> node*{
-                return nullptr;
+                auto c_mul = [](fpoint x_re, fpoint x_im, fpoint y_re, fpoint y_im) -> std::pair<fpoint, fpoint>{
+                    std::pair<fpoint, fpoint> z;
+                    z.first = x_re * y_re - x_im * y_im;
+                    z.second = x_re * y_im + x_im * y_re;
+                    return z;
+                };
+
+                auto c_exp = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
+                    fpoint a = std::exp(x_re);
+                    x_re = a * std::cos(x_im);
+                    x_im = a * std::sin(x_im);
+                    return std::make_pair(x_re, x_im);
+                };
+
+                auto c_log = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
+                    std::pair<fpoint, fpoint> z;
+                    z.first = 0.5 * std::log(x_re * x_re + x_im * x_im);
+                    z.second = std::atan2(x_im, x_re);
+                    return z;
+                };
+
+                p = p->next, q = q->next;
+                auto log_result = c_log(p->real, p->imag);
+                auto mul_result = c_mul(q->real, q->imag, log_result.first, log_result.second);
+                auto exp_result = c_exp(mul_result.first, mul_result.second);
+
+                return constant(exp_result.first, exp_result.second);
             },
 
             [](node *p, node *q) -> node*{
+                throw(error("reject, constant^polynomial."));
                 return nullptr;
             }
         },
+
+        // polynomial^symbol     -> reject
+        // polynomial^constant   -> calc
+        // polynomial^polynomial -> reject
         {
             [](node *p, node *q) -> node*{
+                throw(error("reject, polynomial^symbol."));
                 return nullptr;
             },
 
-            [](node *p, node *q) -> node*{
-                return nullptr;
+            [](node *x_, node *n_) -> node*{
+                node *a = n_;
+                a = a->next;
+                if(a->real < 0){ throw(error("reject, polynomial^negative.")); }
+                if(a->imag != 0){ throw(error("reject, polynomial^complex.")); }
+                fpoint integer = 0, frac = std::modf(a->real, &integer);
+                if(frac != 0){ throw(error("reject, polynomial^" + to_string(frac))); }
+                unsigned int n = static_cast<unsigned int>(integer);
+                node *x = copy(x_), *p, *q;
+                if(n == 1){ return x; }
+                if(n == 0){ p = constant(1); }else{
+                    auto odd = [](unsigned int n) -> bool{ return (n & 1) == 1; };
+                    p = multiply(x, x);  n -= 2;
+                    if (n > 0) {
+                        q = p;
+                        if (odd(n)) p = multiply(q, x);
+                        else        p = copy(q);
+                        dispose(x);  x = q;  n /= 2;
+                        if (odd(n)) {
+                            q = multiply(p, x);  dispose(p);  p = q;
+                        }
+                        while ((n /= 2) != 0) {
+                            q = multiply(x, x);  dispose(x);  x = q;
+                            if (odd(n)) {
+                                q = multiply(p, x);  dispose(p);  p = q;
+                            }
+                        }
+                    }
+                }
+                dispose(x);
+                return p;
             },
 
             [](node *p, node *q) -> node*{
+                throw(error("reject, polynomial^polynomial."));
                 return nullptr;
             }
         }
@@ -530,9 +581,9 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
             }
             bool nega;
             if(nega = im < 0){ im = -im; }
-            if(ext_paren){ r += "("; }
+            r += "(";
             r += (to_string(re) + (nega ? "-" : "+") + (im == 1 ? std::string("i") : to_string(im)) + "i");
-            if(ext_paren){ r += ")"; }
+            r += ")";
             paren = true;
         }
         first = false;

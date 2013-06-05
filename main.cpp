@@ -397,9 +397,13 @@ int main(){
         using namespace poly;
         node *n = constant(2.2, 3.3), *m = constant(3);
         add(n, variable("x"));
-        n = multiply(copy(n), variable("y", 0, 0.5));
-        node *o = power(n, m);
+        n = multiply(n, variable("y", 0, 0.5));
+        node *o = power(n, m), *p = new_node();
         std::cout << poly_to_string(o) << std::endl;
+        add(p, copy(o));
+        add(p, copy(o));
+        node *q = divide(p, o);
+        std::cout << poly_to_string(q) << std::endl;
     }
 
     return 0;

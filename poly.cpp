@@ -283,8 +283,9 @@ void sub(node *p, node *q){
     add(p, q);
 }
 
-template<class F>
-node *proto_multiply_divide(const node *x, const node *y, F f){
+// 乗算
+// 新たな多項式を返す
+node *multiply(const node *x, const node *y){
     node *ep = nullptr, *eq = nullptr;
     const node *z;
     node *p, *p1, *q, *r;
@@ -294,7 +295,8 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
         while(z = z->next){
             dispose_node(q);
             q = new_node();
-            f(q, y, z);
+            q->real = y->real * z->real - y->imag * z->imag;
+            q->imag = y->real * z->imag + y->imag * z->real;
             auto add_exponent = [q](const node *ptr){
                 for(auto iter = ptr->e.begin(); iter != ptr->e.end(); ++iter){
                     auto jter = q->e.find(iter->first);
@@ -363,50 +365,40 @@ node *proto_multiply_divide(const node *x, const node *y, F f){
     return r;
 }
 
-// 乗算
-// 新たな多項式を返す
-node *multiply(const node *x, const node *y){
-    return proto_multiply_divide(
-        x, y,
-        [](node *q, const node *y, const node *z) -> void{
-            q->real = y->real * z->real - y->imag * z->imag;
-            q->imag = y->real * z->imag + y->imag * z->real;
-        }
-    );
-}
-
 // 除算
 // 新たな多項式を返す
-node *divide(const node *x, const node *y){
-    node *p = copy(y), *q;
-    q = p;
-    while(p = p->next){
-        for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
-            change_sign(iter->second);
-        }
-    }
-    node *r = proto_multiply_divide(
-        x, q,
-        [](node *q, const node *z, const node *y) -> void{
-            if(y->imag == 0 && z->imag == 0){
-                q->real = y->real / z->real;
-                q->imag = 0;
+node *divide(const node *f, const node *g){
+    auto primitive_divide = [](node *q, const node *z, const node *y) -> void{
+        if(y->imag == 0 && z->imag == 0){
+            q->real = y->real / z->real;
+            q->imag = 0;
+        }else{
+            fpoint w, d;
+            if(std::fabs(z->real) >= std::fabs(z->imag)){
+                w = z->imag / z->real, d = z->real + z->imag * w;
+                q->real = (y->real + y->imag * w) / d;
+                q->imag = (y->imag - y->real * w) / d;
             }else{
-                fpoint w, d;
-                if(std::fabs(z->real) >= std::fabs(z->imag)){
-                    w = z->imag / z->real, d = z->real + z->imag * w;
-                    q->real = (y->real + y->imag * w) / d;
-                    q->imag = (y->imag - y->real * w) / d;
-                }else{
-                    w = z->real / z->imag, d = z->real * w + z->imag;
-                    q->real = (y->real * w + y->imag) / d;
-                    q->imag = (y->imag * w - y->real) / d;
-                }
+                w = z->real / z->imag, d = z->real * w + z->imag;
+                q->real = (y->real * w + y->imag) / d;
+                q->imag = (y->imag * w - y->real) / d;
             }
         }
-    );
-    dispose(q);
-    return r;
+    };
+
+    auto exponent_divide = [](node *q, const node *z, const node *y) -> void{
+        for(auto iter = z->e.begin(); iter != z->e.end(); ++iter){
+            auto jter = y->e.find(iter->first);
+            node *exponent = copy(iter->second);
+            if(jter != y->e.end()){
+                sub(exponent, copy(jter->second));
+                q->e.insert(std::make_pair(iter->first, exponent));
+            }else{
+                change_sign(exponent);
+                q->e.insert(std::make_pair(iter->first, exponent));
+            }
+        }
+    };
 }
 
 // x^n

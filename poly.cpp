@@ -184,6 +184,21 @@ node *variable(const std::string &str, node *ptr){
     return p;
 }
 
+// 先頭の1項だけ多項式としてコピー
+node *copy_node(const node *p){
+    node *q = new_node(), *r;
+    r = q;
+    q->next = new_node();
+    p = p->next;
+    q = q->next;
+    q->real = p->real;
+    q->imag = p->imag;
+    for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
+        q->e.insert(std::make_pair(iter->first, copy(iter->second)));
+    }
+    return r; 
+}
+
 // 多項式をコピー
 node *copy(const node *p){
     node *q, *r;
@@ -367,7 +382,7 @@ node *multiply(const node *x, const node *y){
 
 // 除算
 // 新たな多項式を返す
-node *divide(const node *f, const node *g){
+node *divide(const node *f_, const node *g){
     auto primitive_divide = [](node *q, const node *y, const node *z) -> void{
         if(y->imag == 0 && z->imag == 0){
             q->real = y->real / z->real;
@@ -405,9 +420,36 @@ node *divide(const node *f, const node *g){
     };
 
     node *q = new_node();
+    if(!f_->next){ return q; }
+
     q->next = new_node();
-    primitive_divide(q->next, f->next, g->next);
-    exponent_divide(q->next, f->next, g->next);
+    node *f = copy(f_);
+
+    while(f->next){
+        std::cout << poly_to_string(f) << std::endl;
+        node *p = new_node();
+        p->next = new_node();
+        primitive_divide(p->next, f->next, g->next);
+        exponent_divide(p->next, f->next, g->next);
+        add(q, copy(p));
+        node *head = f->next ?  copy_node(f->next) : nullptr;
+        sub(f, multiply(g, p));
+        if(!head || !f->next){
+            dispose_node(head);
+            continue;
+        }
+        node *new_head = copy_node(f->next);
+        head->real = 0, head->imag = 0;
+        new_head->real = 0, new_head->imag = 0;
+        if(lexicographic_compare(head, new_head) == 0){
+            node *f_head = f->next;
+            f->next = f->next->next;
+            dispose_node(f_head);
+        }
+        dispose(head), dispose(new_head);
+    }
+
+    dispose(f);
     return q;
 }
 
@@ -453,7 +495,7 @@ node *power(node *x, node *y){
             [](node *p, node *q) -> node*{
                 throw(error("reject, constant^symbol."));
                 return nullptr;
-            }, 
+            },
 
             [](node *p, node *q) -> node*{
                 auto c_mul = [](fpoint x_re, fpoint x_im, fpoint y_re, fpoint y_im) -> std::pair<fpoint, fpoint>{

@@ -397,6 +397,7 @@ int main(){
         using namespace poly;
         node *l = variable("x", 2);
         l = multiply(l, variable("y", 3));
+        l = multiply(l, variable("z", 4));
         add(l, variable("x", 2));
 
         node *r = variable("x");

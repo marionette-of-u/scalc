@@ -383,6 +383,15 @@ node *multiply(const node *x, const node *y){
 // 除算
 // 新たな多項式を返す
 node *divide(const node *f_, const node *g){
+    auto check_exponent = [](const node *z, const node *y) -> bool{
+        for(auto iter = y->e.begin(); iter != y->e.end(); ++iter){
+            if(z->e.find(iter->first) == z->e.end()){
+                return false;
+            }
+        }
+        return true;
+    };
+
     auto primitive_divide = [](node *q, const node *y, const node *z) -> void{
         if(y->imag == 0 && z->imag == 0){
             q->real = y->real / z->real;
@@ -410,10 +419,9 @@ node *divide(const node *f_, const node *g){
                 if(exponent->next){
                     q->e.insert(std::make_pair(iter->first, exponent));
                 }else{
-                    dispose_node(exponent);
+                    dispose(exponent);
                 }
             }else{
-                change_sign(exponent);
                 q->e.insert(std::make_pair(iter->first, exponent));
             }
         }
@@ -421,34 +429,37 @@ node *divide(const node *f_, const node *g){
 
     node *q = new_node();
     if(!f_->next){ return q; }
-
-    q->next = new_node();
     node *f = copy(f_);
-
     while(f->next){
         std::cout << poly_to_string(f) << std::endl;
+        if(!check_exponent(f->next, g->next)){
+            node *head = f->next;
+            f->next = f->next->next;
+            dispose_node(head);
+            continue;
+        }
         node *p = new_node();
         p->next = new_node();
         primitive_divide(p->next, f->next, g->next);
         exponent_divide(p->next, f->next, g->next);
         add(q, copy(p));
-        node *head = f->next ?  copy_node(f->next) : nullptr;
+        node *head = f->next ? copy_node(f) : nullptr;
         sub(f, multiply(g, p));
+        dispose(p);
         if(!head || !f->next){
             dispose_node(head);
-            continue;
+        }else{
+            node *new_head = copy_node(f);
+            head->real = 0, head->imag = 0;
+            new_head->real = 0, new_head->imag = 0;
+            if(lexicographic_compare(head, new_head) == 0){
+                node *f_head = f->next;
+                f->next = f->next->next;
+                dispose_node(f_head);
+            }
+            dispose(head), dispose(new_head);
         }
-        node *new_head = copy_node(f->next);
-        head->real = 0, head->imag = 0;
-        new_head->real = 0, new_head->imag = 0;
-        if(lexicographic_compare(head, new_head) == 0){
-            node *f_head = f->next;
-            f->next = f->next->next;
-            dispose_node(f_head);
-        }
-        dispose(head), dispose(new_head);
     }
-
     dispose(f);
     return q;
 }

@@ -367,6 +367,18 @@ public:
                 }
                 match = true;
                 if(!match){ iter = iter_prime; break; }
+                if(iter == last){ match = false; }else{
+                    InputIter iter_prime = iter;
+                    do{
+                        if(iter != last && *iter == 'i'){
+                            ++iter;
+                            match = true;
+                        }else{ match = false; }
+                        if(!match){ iter = iter_prime; break; }
+                    }while(false);
+                }
+                match = true;
+                if(!match){ iter = iter_prime; break; }
             }while(false);
         }
         return std::make_pair(match, iter);
@@ -588,7 +600,7 @@ public:
         return result;
     }
 };
-} // namespace lexer
+} // namespace ﻿lexer
 
 #endif // LEXER_HPP_
 

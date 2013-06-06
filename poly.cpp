@@ -439,9 +439,7 @@ node *divide(const node *f_, const node *g, node *rem){
                 dummy_head->next = head;
                 head->next = nullptr;
                 add(rem, dummy_head);
-            }else{
-                dispose_node(head);
-            }
+            }else{ dispose_node(head); }
             continue;
         }
         node *p = new_node();
@@ -452,9 +450,7 @@ node *divide(const node *f_, const node *g, node *rem){
         node *head = f->next ? copy_node(f) : nullptr;
         sub(f, multiply(g, p));
         dispose(p);
-        if(!head || !f->next){
-            dispose_node(head);
-        }else{
+        if(!head || !f->next){ dispose_node(head); }else{
             node *new_head = copy_node(f);
             head->real = 0, head->imag = 0;
             new_head->real = 0, new_head->imag = 0;
@@ -650,8 +646,8 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
             }else{
                 bool sign_re = re > 0, sign_im = im > 0;
                 std::string s;
+                if(!sign_re && !sign_im || sign_re != sign_im){ s += "-"; }else if(sign_re && sign_im){ s += "+"; }
                 if(!p->e.empty()){
-                    if(!sign_re && !sign_im || sign_re != sign_im){ s += "-"; }else if(sign_re && sign_im){ s += "+"; }
                     s += "(";
                     if(!sign_re && !sign_im){
                         s += to_string(-re) + "+" + to_string(im == -1 ? std::string("-i") : to_string(-im) + "i");

@@ -37,10 +37,12 @@ struct value : eval_target{
     virtual std::string ast_str() const{
         std::stringstream ss;
         ss << v;
+        if(!real){ ss << "i"; }
         return ss.str();
     }
 
     fpoint v;
+    bool real;
 };
 
 struct symbol : eval_target{
@@ -294,7 +296,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d where c = 10, d = c + 10"
+            "fn_call 1 + 2 * 3i (a b -> a + b) c d where c = 10, d = c + 10"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 
@@ -344,8 +346,10 @@ int main(){
                     {
                         value *v = new value;
                         std::stringstream ss;
-                        ss << std::string(iter->second.first, iter->second.second);
+                        std::string str(iter->second.first, iter->second.second);
+                        ss << std::string(str);
                         ss >> v->v;
+                        v->real = str.back() != 'i';
                         target_ptr = v;
                     }
                     break;
@@ -374,7 +378,7 @@ int main(){
             std::cout << "parsing error.";
             return 0;
         }
-        std::string r = root->ast_str();
+        std::cout << root->ast_str() << std::endl;
     }
 
     //{
@@ -410,18 +414,43 @@ int main(){
         node *l = variable("x", 2);
         l = multiply(l, variable("y", 3));
         l = multiply(l, variable("z", 4));
-        l = multiply(l, constant(2.2, 3.3));
+        l = multiply(l, constant(1.5, 0.5));
         add(l, variable("x", 2));
 
         node *r = variable("x");
         r = multiply(r, variable("y"));
-        add(r, constant(1.1, 2.2));
+        add(r, constant(2, 3));
         add(r, variable("y", 3));
 
         node *rem = new_node();
         node *q = divide(l, r, rem);
         std::cout << poly_to_string(l) << std::endl;
         std::cout << poly_to_string(r) << std::endl;
+        std::cout << poly_to_string(q) << std::endl;
+        std::cout << poly_to_string(rem) << std::endl;
+    }
+    std::cout << "----" << std::endl;
+
+    {
+        using namespace poly;
+        node *l = variable("x", 2);
+        l = multiply(l, variable("y", 3));
+        l = multiply(l, variable("z", 4));
+        l = multiply(l, constant(1.5, 0.5));
+        add(l, variable("x", 2));
+
+        node *r = copy(l);
+
+        add(l, copy(l));
+        add(l, copy(l));
+        add(l, copy(l));
+        add(l, copy(l));
+        add(l, copy(l));
+
+        node *rem = new_node();
+        node *q = divide(r, l, rem);
+        std::cout << poly_to_string(r) << std::endl;
+        std::cout << poly_to_string(l) << std::endl;
         std::cout << poly_to_string(q) << std::endl;
         std::cout << poly_to_string(rem) << std::endl;
     }

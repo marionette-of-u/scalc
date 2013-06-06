@@ -382,7 +382,7 @@ node *multiply(const node *x, const node *y){
 
 // 除算
 // 新たな多項式を返す
-node *divide(const node *f_, const node *g){
+node *divide(const node *f_, const node *g, node *rem){
     auto check_exponent = [](const node *z, const node *y) -> bool{
         for(auto iter = y->e.begin(); iter != y->e.end(); ++iter){
             if(z->e.find(iter->first) == z->e.end()){
@@ -431,11 +431,17 @@ node *divide(const node *f_, const node *g){
     if(!f_->next){ return q; }
     node *f = copy(f_);
     while(f->next){
-        std::cout << poly_to_string(f) << std::endl;
         if(!check_exponent(f->next, g->next)){
             node *head = f->next;
             f->next = f->next->next;
-            dispose_node(head);
+            if(rem){
+                node *dummy_head = new_node();
+                dummy_head->next = head;
+                head->next = nullptr;
+                add(rem, dummy_head);
+            }else{
+                dispose_node(head);
+            }
             continue;
         }
         node *p = new_node();
@@ -643,28 +649,29 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
                 r += ")";
             }else{
                 bool sign_re = re > 0, sign_im = im > 0;
+                std::string s;
                 if(!p->e.empty()){
-                    if(!sign_re && !sign_im){ r += "-"; }
-                    r += "(";
+                    if(!sign_re && !sign_im || sign_re != sign_im){ s += "-"; }else if(sign_re && sign_im){ s += "+"; }
+                    s += "(";
                     if(!sign_re && !sign_im){
-                        r += to_string(-re) + "+" + to_string(im == -1 ? std::string("-i") : to_string(-im) + "i");
+                        s += to_string(-re) + "+" + to_string(im == -1 ? std::string("-i") : to_string(-im) + "i");
                     }else if(!sign_re && sign_im){
-                        r = "-" + r;
-                        r += to_string(-re) + "-" + to_string(im == 1 ? std::string("i") : to_string(im) + "i");
+                        s += to_string(-re) + "-" + to_string(im == 1 ? std::string("i") : to_string(im) + "i");
                     }else if(sign_re && !sign_im){
-                        r += to_string(re) + to_string(im == -1 ? std::string("-i") : to_string(im) + "i");
+                        s += to_string(re) + to_string(im == -1 ? std::string("-i") : to_string(im) + "i");
                     }else{
-                        r += to_string(re) + "+" + to_string(im == 1 ? std::string("i") : to_string(im) + "i");
+                        s += to_string(re) + "+" + to_string(im == 1 ? std::string("i") : to_string(im) + "i");
                     }
-                    r += ")";
+                    s += ")";
                 }else{
-                    r += to_string(re);
-                    if(im > 0){ r += "+"; }else{
+                    s += to_string(re);
+                    if(im > 0){ s += "+"; }else{
                         im = -im;
-                        r += "-";
+                        s += "-";
                     }
-                    r += to_string(im == 1 ? std::string("i") : to_string(im) + "i");
+                    s += to_string(im == 1 ? std::string("i") : to_string(im) + "i");
                 }
+                r += s;
             }
             paren = true;
         }

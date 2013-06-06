@@ -108,7 +108,7 @@ namespace poly{
     void add(node *p, node *q);
     void sub(node *p, node *q);
     node *multiply(const node *x, const node *y);
-    node *divide(const node *x, const node *y);
+    node *divide(const node *f_, const node *g, node *rem);
     node *power(node *x, node *n);
     std::string poly_to_string(const node *p);
 }

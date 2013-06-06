@@ -392,22 +392,38 @@ int main(){
     //    node *o = power(n, constant(0, 1));
     //    std::cout << poly_to_string(o) << std::endl;
     //}
+    //std::cout << "----" << std::endl;
+
+    //{
+    //    using namespace poly;
+    //    node *l = constant(2.2, 3.3);
+    //    add(l, variable("x"));
+    //    l = multiply(l, variable("y"));
+    //    l = power(l, constant(3));
+
+    //    std::cout << poly_to_string(l) << std::endl;
+    //}
+    //std::cout << "----" << std::endl;
 
     {
         using namespace poly;
         node *l = variable("x", 2);
         l = multiply(l, variable("y", 3));
         l = multiply(l, variable("z", 4));
+        l = multiply(l, constant(2.2, 3.3));
         add(l, variable("x", 2));
 
         node *r = variable("x");
         r = multiply(r, variable("y"));
+        add(r, constant(1.1, 2.2));
         add(r, variable("y", 3));
 
-        node *q = divide(l, r);
+        node *rem = new_node();
+        node *q = divide(l, r, rem);
         std::cout << poly_to_string(l) << std::endl;
         std::cout << poly_to_string(r) << std::endl;
         std::cout << poly_to_string(q) << std::endl;
+        std::cout << poly_to_string(rem) << std::endl;
     }
 
     return 0;

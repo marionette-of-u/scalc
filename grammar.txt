@@ -31,7 +31,6 @@
   EqualitySequence<analyzer::equality_sequence*>
     : [make_equality_sequence] Equality(0)
     | [make_equality_sequence] EqualitySequence(0) comma Equality(1)
-    | []
     ;
 
   Equality<analyzer::equality*>
@@ -40,8 +39,8 @@
 
   Sequence<analyzer::sequence*>
     : [make_seq] Sequence(0) BaseExpr(1)
+    | [make_seq] BaseExpr(0)
     | [make_lambda] Sequence(0) right_arrow BaseExpr(1)
-    | []
     ;
 
   BaseExpr<analyzer::eval_target*>

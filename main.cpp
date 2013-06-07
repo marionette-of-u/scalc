@@ -275,6 +275,13 @@ namespace analyzer{
             return ptr;
         }
 
+        sequence *make_seq(eval_target *e){
+            sequence *ptr = new sequence;
+            ptr->e.reset(e);
+            ptr->head = ptr;
+            return ptr;
+        }
+
         sequence *make_lambda(sequence *s, eval_target *e){
             lambda *l = new lambda;
             l->args.reset(s);
@@ -295,7 +302,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "fn_call 1 + 2 * 3i (a b -> a + b) c d where c = 10, d = c + 10"
+            "f (a b -> c d)"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 

@@ -302,7 +302,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "f (a b -> c d 1 + 1)"
+            "a b -> (a + b)"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 

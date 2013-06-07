@@ -37,10 +37,14 @@
     : [make_equality] symbol(0) equal Sequence(1)
     ;
 
+  Lambda<analyzer::sequence*>
+    : [make_lambda] Sequence(0) right_arrow Sequence(1)
+    | [identity] Sequence(0)
+    ;
+
   Sequence<analyzer::sequence*>
     : [make_seq] Sequence(0) BaseExpr(1)
     | [make_seq] BaseExpr(0)
-    | [make_lambda] Sequence(0) right_arrow BaseExpr(1)
     ;
 
   BaseExpr<analyzer::eval_target*>
@@ -52,7 +56,7 @@
     | [make_binary_op] BaseExpr(1) double_slash(0) BaseExpr(2)
     | [make_negate_expr] <unary_minus> minus BaseExpr(0)
     | [identity] <unary_plus> plus BaseExpr(0)
-    | [identity] left_paren Sequence(0) right_paren
+    | [identity] left_paren Lambda(0) right_paren
     | [identity] identifier(0)
     | [identity] symbol(0)
     ;

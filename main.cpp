@@ -302,7 +302,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "f (a b -> c d)"
+            "f (a b -> c d 1 + 1)"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 
@@ -380,7 +380,7 @@ int main(){
         }catch(std::runtime_error &e){
             std::cout << "parsing error: " << e.what();
         }
-    
+
         eval_target *root = nullptr;
         if(!p.accept(root)){
             std::cout << "parsing error.";

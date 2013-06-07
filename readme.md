@@ -1,21 +1,23 @@
-ï»¿# æ¦‚è¦
-ç°¡å˜ãªå¤šé …å¼è¨ˆç®—ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
+# ŠT—v
+ŠÈ’P‚È‘½€Ž®ŒvŽZƒvƒƒOƒ‰ƒ€
 
-# é–‹ç™ºçŠ¶æ³
-1. å…¥åŠ›å½¢å¼ã®lexerã®è¦å®šï¼ˆæ¸ˆï¼‰
-2. å…¥åŠ›å½¢å¼ã®parserã®è¦å®šï¼ˆæ¸ˆï¼‰
-3. æŠ½è±¡æ§‹æ–‡æœ¨ã®ç¢ºèªï¼ˆæ¸ˆï¼‰
-4. å¤šé …å¼è¨ˆç®—æ©Ÿèƒ½ã®å®Ÿè£…ï¼ˆå¥¥æ‘æ™´å½¦è‘—ã€ŽCè¨€èªžã«ã‚ˆã‚‹æœ€æ–°ã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ äº‹å…¸ã€ã‚ˆã‚Šï¼‰
+# ŠJ”­ó‹µ
+1. “ü—ÍŒ`Ž®‚Ìlexer‚Ì‹K’èiÏj
+2. “ü—ÍŒ`Ž®‚Ìparser‚Ì‹K’èiÏj
+3. ’ŠÛ\•¶–Ø‚ÌŠm”FiÏj
+4. ‘½€Ž®ŒvŽZ‹@”\‚ÌŽÀ‘•i‰œ‘º°•F’˜wCŒ¾Œê‚É‚æ‚éÅVƒAƒ‹ƒSƒŠƒYƒ€Ž–“Tx‚æ‚èjiÏj
+5. poly‚Æanalyzer‚ÌŒ‹‡
+6. ƒZƒbƒVƒ‡ƒ“‚Ì“±“ü
 
-# ä½¿ç”¨è¨€èªžãƒ»ãƒ„ãƒ¼ãƒ«ã¨å‹•ä½œç¢ºèª
+# Žg—pŒ¾ŒêEƒc[ƒ‹‚Æ“®ìŠm”F
 <table>
 <tr><td>Language</td><td>C++11 (VC++ 11.0)</td></tr>
 <tr><td>Tools</td><td>kp19pp Ver. May 26, 2013 (<a href="https://github.com/marionette-of-u/kp19pp">kp19pp</a>), paper_cutter Ver. Jul 07, 2012 (<a href="https://github.com/marionette-of-u/paper_cutter">paper_cutter</a>)</td></tr>
 </table>
 
-# å­—å¥è§£æžåŠã³æ§‹æ–‡è§£æžã®æŒ™å‹•ã®è©³ç´°
-lexer.txtåŠã³grammar.txtã‚’å‚ç…§
+# Žš‹å‰ðÍ‹y‚Ñ\•¶‰ðÍ‚Ì‹““®‚ÌÚ×
+lexer.txt‹y‚Ñgrammar.txt‚ðŽQÆ
 
-# ãã®ä»–
+# ‚»‚Ì‘¼
 Copyright (c) 2013 marionette-of-u All Rights Reserved.
 

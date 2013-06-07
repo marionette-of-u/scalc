@@ -1,12 +1,12 @@
 <token_desc> token{
   <right>{
     unary_minus, unary_plus;
-    double_slash<binary_operator*>;
-    hat<binary_operator*>;
+    double_slash<analyzer::binary_operator*>;
+    hat<analyzer::binary_operator*>;
   }
   <left>{
-    asterisk<binary_operator*>, slash<binary_operator*>;
-    plus<binary_operator*>, minus<binary_operator*>;
+    asterisk<analyzer::binary_operator*>, slash<analyzer::binary_operator*>;
+    plus<analyzer::binary_operator*>, minus<analyzer::binary_operator*>;
   }
   left_paren, right_paren;
   <left>{
@@ -14,37 +14,37 @@
     equal;
     comma;
   }
-  identifier<value*>, symbol<symbol*>, keyword_where, keyword_let;
+  identifier<analyzer::value*>, symbol<analyzer::symbol*>, keyword_where, keyword_let;
 }
 
 <grammar> parser{
-  Statement<eval_target*>
+  Statement<analyzer::eval_target*>
     : [make_statement] Sequence(0) WhereEquality(1)
     | [define_symbol] keyword_let symbol(0) equal Sequence(1)
     ;
 
-  WhereEquality<equality_sequence*>
+  WhereEquality<analyzer::equality_sequence*>
     : [identity] keyword_where EqualitySequence(0)
     | []
     ;
 
-  EqualitySequence<equality_sequence*>
+  EqualitySequence<analyzer::equality_sequence*>
     : [make_equality_sequence] Equality(0)
     | [make_equality_sequence] EqualitySequence(0) comma Equality(1)
     | []
     ;
 
-  Equality<equality*>
+  Equality<analyzer::equality*>
     : [make_equality] symbol(0) equal Sequence(1)
     ;
 
-  Sequence<sequence*>
+  Sequence<analyzer::sequence*>
     : [make_seq] Sequence(0) BaseExpr(1)
     | [make_lambda] Sequence(0) right_arrow BaseExpr(1)
     | []
     ;
 
-  BaseExpr<eval_target*>
+  BaseExpr<analyzer::eval_target*>
     : [make_binary_op] BaseExpr(1) plus(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) minus(0) BaseExpr(2)
     | [make_binary_op] BaseExpr(1) asterisk(0) BaseExpr(2)

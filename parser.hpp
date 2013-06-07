@@ -9,8 +9,8 @@
 namespace parser{
 
 enum token{
-    token_unary_minus = 0,
-    token_unary_plus = 0,
+    token_unary_minus = -1,
+    token_unary_plus = -1,
     token_double_slash = lexer::token_double_slash,
     token_hat = lexer::token_hat,
     token_asterisk = lexer::token_asterisk,
@@ -216,9 +216,9 @@ private:
 
     bool call_0_make_equality(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        equality* r = sa_.make_equality(arg0, arg1);
+        analyzer::symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::equality* r = sa_.make_equality(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -234,9 +234,9 @@ private:
 
     bool call_0_define_symbol(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        eval_target* r = sa_.define_symbol(arg0, arg1);
+        analyzer::symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.define_symbol(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -245,8 +245,8 @@ private:
 
     bool call_0_identity(int nonterminal_index, int base, int arg_index0)
     {
-        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.identity(arg0);
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* r = sa_.identity(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -255,8 +255,8 @@ private:
 
     bool call_0_make_negate_expr(int nonterminal_index, int base, int arg_index0)
     {
-        eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.make_negate_expr(arg0);
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* r = sa_.make_negate_expr(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -265,10 +265,10 @@ private:
 
     bool call_0_make_binary_op(int nonterminal_index, int base, int arg_index0, int arg_index1, int arg_index2)
     {
-        binary_operator* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        eval_target* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
-        eval_target* r = sa_.make_binary_op(arg0, arg1, arg2);
+        analyzer::binary_operator* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
+        analyzer::eval_target* r = sa_.make_binary_op(arg0, arg1, arg2);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -277,9 +277,9 @@ private:
 
     bool call_0_make_seq(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        sequence* r = sa_.make_seq(arg0, arg1);
+        analyzer::sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::sequence* r = sa_.make_seq(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -288,9 +288,9 @@ private:
 
     bool call_0_make_lambda(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        sequence* r = sa_.make_lambda(arg0, arg1);
+        analyzer::sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::sequence* r = sa_.make_lambda(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -299,8 +299,8 @@ private:
 
     bool call_1_identity(int nonterminal_index, int base, int arg_index0)
     {
-        value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.identity(arg0);
+        analyzer::value* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* r = sa_.identity(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -309,8 +309,8 @@ private:
 
     bool call_2_identity(int nonterminal_index, int base, int arg_index0)
     {
-        symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.identity(arg0);
+        analyzer::symbol* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* r = sa_.identity(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -319,8 +319,8 @@ private:
 
     bool call_3_identity(int nonterminal_index, int base, int arg_index0)
     {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        eval_target* r = sa_.identity(arg0);
+        analyzer::sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* r = sa_.identity(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -329,8 +329,8 @@ private:
 
     bool call_0_make_equality_sequence(int nonterminal_index, int base, int arg_index0)
     {
-        equality* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality_sequence* r = sa_.make_equality_sequence(arg0);
+        analyzer::equality* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::equality_sequence* r = sa_.make_equality_sequence(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -339,8 +339,8 @@ private:
 
     bool call_4_identity(int nonterminal_index, int base, int arg_index0)
     {
-        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality_sequence* r = sa_.identity(arg0);
+        analyzer::equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::equality_sequence* r = sa_.identity(arg0);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -349,9 +349,9 @@ private:
 
     bool call_1_make_equality_sequence(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        equality_sequence* r = sa_.make_equality_sequence(arg0, arg1);
+        analyzer::equality_sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::equality* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::equality_sequence* r = sa_.make_equality_sequence(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -360,9 +360,9 @@ private:
 
     bool call_0_make_statement(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
-        equality_sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        eval_target* r = sa_.make_statement(arg0, arg1);
+        analyzer::sequence* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::equality_sequence* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.make_statement(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);

@@ -11,6 +11,9 @@
 
 typedef double fpoint;
 
+// 解析対象の文字列が入るvector.
+typedef std::vector<char> statement_str;
+
 // error
 class error : public std::runtime_error{
 public:
@@ -53,6 +56,52 @@ private:
     function_type default_function;
 };
 
+// str_wrapper
+class str_wrapper{
+public:
+    inline str_wrapper() : ptr(nullptr){}
+    inline str_wrapper(const std::string &str) : ptr(get_ptr(str)){}
+
+    inline str_wrapper &operator =(const std::string &other){
+        ptr = get_ptr(other);
+        return *this;
+    }
+
+    inline char operator [](std::size_t idx) const{
+        return (*ptr)[idx];
+    }
+
+    inline bool operator ==(const str_wrapper &other) const{
+        return *ptr == *other.ptr;
+    }
+
+    inline bool operator !=(const str_wrapper &other) const{
+        return *ptr != *other.ptr;
+    }
+
+    inline bool operator <(const str_wrapper &other) const{
+        return *ptr < *other.ptr;
+    }
+
+    inline bool operator >(const str_wrapper &other) const{
+        return *ptr > *other.ptr;
+    }
+
+    const std::string *ptr;
+
+private:
+    inline static const std::string *get_ptr(const std::string &str){
+        static std::set<std::string> set;
+        auto iter = set.find(str);
+        if(iter == set.end()){
+            auto p = set.insert(str);
+            return &*p.first;
+        }else{
+            return &*iter;
+        }
+    }
+};
+
 namespace poly{
     template<class T>
     class type_idx_manager{
@@ -75,47 +124,6 @@ namespace poly{
         static const std::size_t idx = type_idx_manager<void>::get_type_idx<T>();
         return idx;
     }
-
-    // str_wrapper
-    class str_wrapper{
-    public:
-        inline str_wrapper() : ptr(nullptr){}
-        inline str_wrapper(const std::string &str) : ptr(get_ptr(str)){}
-
-        inline char operator [](std::size_t idx) const{
-            return (*ptr)[idx];
-        }
-
-        inline bool operator ==(const str_wrapper &other) const{
-            return *ptr == *other.ptr;
-        }
-
-        inline bool operator !=(const str_wrapper &other) const{
-            return *ptr != *other.ptr;
-        }
-
-        inline bool operator <(const str_wrapper &other) const{
-            return *ptr < *other.ptr;
-        }
-
-        inline bool operator >(const str_wrapper &other) const{
-            return *ptr > *other.ptr;
-        }
-
-        const std::string *ptr;
-
-    private:
-        inline static const std::string *get_ptr(const std::string &str){
-            static std::set<std::string> set;
-            auto iter = set.find(str);
-            if(iter == set.end()){
-                auto p = set.insert(str);
-                return &*p.first;
-            }else{
-                return &*iter;
-            }
-        }
-    };
 
     inline std::ostream &operator <<(std::ostream &o, const str_wrapper &s){
         o << *s.ptr;

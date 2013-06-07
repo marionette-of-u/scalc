@@ -1,4 +1,5 @@
-﻿#include <string>
+﻿#include <set>
+#include <string>
 #include <sstream>
 #include <utility>
 #include <memory>
@@ -679,7 +680,7 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
                     if(ext_paren){ paren = true; }
                 }
                 one = false;
-                r += iter->first;
+                r += *iter->first.ptr;
                 if(lexicographic_compare(e, c) != 0){
                     std::pair<std::string, bool> s = poly_to_string_impl(e, true);
                     r += "^" + std::string(s.second ? "(" : "") + s.first + std::string(s.second ? ")" : "");

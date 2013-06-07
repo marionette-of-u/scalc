@@ -4,6 +4,8 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include <set>
+#include <string>
 #include <typeinfo>
 #include <iostream>
 
@@ -74,8 +76,54 @@ namespace poly{
         return idx;
     }
 
+    // str_wrapper
+    class str_wrapper{
+    public:
+        inline str_wrapper() : ptr(nullptr){}
+        inline str_wrapper(const std::string &str) : ptr(get_ptr(str)){}
+
+        inline char operator [](std::size_t idx) const{
+            return (*ptr)[idx];
+        }
+
+        inline bool operator ==(const str_wrapper &other) const{
+            return *ptr == *other.ptr;
+        }
+
+        inline bool operator !=(const str_wrapper &other) const{
+            return *ptr != *other.ptr;
+        }
+
+        inline bool operator <(const str_wrapper &other) const{
+            return *ptr < *other.ptr;
+        }
+
+        inline bool operator >(const str_wrapper &other) const{
+            return *ptr > *other.ptr;
+        }
+
+        const std::string *ptr;
+
+    private:
+        inline static const std::string *get_ptr(const std::string &str){
+            static std::set<std::string> set;
+            auto iter = set.find(str);
+            if(iter == set.end()){
+                auto p = set.insert(str);
+                return &*p.first;
+            }else{
+                return &*iter;
+            }
+        }
+    };
+
+    inline std::ostream &operator <<(std::ostream &o, const str_wrapper &s){
+        o << *s.ptr;
+        return o;
+    }
+
     struct node;
-    typedef std::map<std::string, node*> exponent_type;
+    typedef std::map<str_wrapper, node*> exponent_type;
 
     // 多項式
     struct node{

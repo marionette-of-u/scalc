@@ -11,6 +11,14 @@
 
 typedef double fpoint;
 
+// 任意の値を文字列化
+template<class T>
+inline std::string to_string(const T &v){
+    std::stringstream ss;
+    ss << v;
+    return ss.str();
+}
+
 // 解析対象の文字列が入るvector.
 typedef std::vector<char> statement_str;
 
@@ -61,8 +69,14 @@ class str_wrapper{
 public:
     inline str_wrapper() : ptr(nullptr){}
     inline str_wrapper(const std::string &str) : ptr(get_ptr(str)){}
+    inline str_wrapper(const char *str) : ptr(get_ptr(str)){}
 
     inline str_wrapper &operator =(const std::string &other){
+        ptr = get_ptr(other);
+        return *this;
+    }
+
+    inline str_wrapper &operator =(const char *other){
         ptr = get_ptr(other);
         return *this;
     }
@@ -72,19 +86,19 @@ public:
     }
 
     inline bool operator ==(const str_wrapper &other) const{
-        return *ptr == *other.ptr;
+        return ptr == other.ptr;
     }
 
     inline bool operator !=(const str_wrapper &other) const{
-        return *ptr != *other.ptr;
+        return ptr != other.ptr;
     }
 
     inline bool operator <(const str_wrapper &other) const{
-        return *ptr < *other.ptr;
+        return ptr < other.ptr;
     }
 
     inline bool operator >(const str_wrapper &other) const{
-        return *ptr > *other.ptr;
+        return ptr > other.ptr;
     }
 
     const std::string *ptr;

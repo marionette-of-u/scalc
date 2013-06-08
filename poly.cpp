@@ -125,13 +125,6 @@ int lexicographic_compare(const node *l, const node *r){
     return result;
 }
 
-template<class T>
-std::string to_string(const T &v){
-    std::stringstream ss;
-    ss << v;
-    return ss.str();
-}
-
 // 項を生成
 node *new_node(){
     return new node;

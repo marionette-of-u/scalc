@@ -11,7 +11,6 @@
 #include "common.hpp"
 #include "parser.hpp"
 
-// ---- lex data.
 namespace lex_data{
     // 字句解析結果のrange
     typedef std::pair<statement_str::const_iterator, statement_str::const_iterator> token_range;
@@ -23,12 +22,41 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
-// ---- ast element type.
 namespace analyzer{
-    // interface
+    struct eval_target;
+    struct symbol;
+
+    class semantic_data{
+    public:
+        // スタックに計算結果を積む
+        void push_stack(poly::node *ptr);
+
+        // スタックから計算結果を取り出す
+        poly::node *pop_stack();
+
+        // 記号が変数かどうかを問い合わせる
+        // 変数であれば値を返し、そうでなければ入力記号を返す
+        eval_target *inquiry(symbol *s);
+
+    private:
+        // 計算の中途結果が入るstack
+        std::vector<poly::node*> stack;
+
+        // local args
+        std::vector<std::map<str_wrapper, eval_target*>> local_args;
+
+        // global variable
+        std::map<str_wrapper, eval_target*> global_variable_map;
+    };
+
+    void semantic_data::push_stack(poly::node *ptr){
+        stack.push_back(ptr);
+    }
+
     struct eval_target{
         virtual ~eval_target(){}
         virtual std::string ast_str() const = 0;
+        virtual void eval(semantic_data&) const{}
     };
 
     struct value : eval_target{
@@ -50,6 +78,22 @@ namespace analyzer{
 
         str_wrapper s;
     };
+
+    poly::node *semantic_data::pop_stack(){
+        poly::node *ptr = stack.back();
+        stack.pop_back();
+        return ptr;
+    }
+
+    eval_target *semantic_data::inquiry(symbol *s){
+        for(auto iter = local_args.rbegin(); iter != local_args.rend(); ++iter){
+            auto jter = iter->find(s->s);
+            if(jter != iter->end()){ return jter->second; }
+        }
+        auto iter = global_variable_map.find(s->s);
+        if(iter != global_variable_map.end()){ return iter->second; }
+        return s;
+    }
 
     struct binary_operator : eval_target{
         binary_operator() : lhs(nullptr), rhs(nullptr){}
@@ -101,11 +145,11 @@ namespace analyzer{
     };
 
     struct lambda : sequence{
-        lambda() : args(nullptr){}
+        lambda() : args(nullptr), name("lambda_" + to_string(lambda_counter())){}
 
         virtual std::string ast_str() const{
             std::string str;
-            str += "(lambda";
+            str += *name.ptr;
             for(const sequence *ptr = args->head; ptr; ptr = ptr->next.get()){
                 str += " " + ptr->e->ast_str();
             }
@@ -115,6 +159,15 @@ namespace analyzer{
 
         // lambda式の引数
         std::unique_ptr<sequence> args;
+
+        // lambda式の名前
+        str_wrapper name;
+
+    private:
+        static std::size_t lambda_counter(){
+            static std::size_t i = 0;
+            return i++;
+        }
     };
 
     struct equality : eval_target{
@@ -302,7 +355,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "a b -> (a + b)"
+            "a b -> a + b"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 

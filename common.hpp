@@ -101,6 +101,14 @@ public:
         return ptr > other.ptr;
     }
 
+    inline bool operator <=(const str_wrapper &other) const{
+        return ptr <= other.ptr;
+    }
+
+    inline bool operator >=(const str_wrapper &other) const{
+        return ptr >= other.ptr;
+    }
+
     const std::string *ptr;
 
 private:
@@ -145,7 +153,14 @@ namespace poly{
     }
 
     struct node;
-    typedef std::map<str_wrapper, node*> exponent_type;
+
+    struct str_wrapper_less : public std::binary_function<str_wrapper, str_wrapper, bool>{
+        inline bool operator ()(const str_wrapper &lhs, const str_wrapper &rhs) const{
+            return *lhs.ptr < *rhs.ptr;
+        }
+    };
+
+    typedef std::map<str_wrapper, node*, str_wrapper_less> exponent_type;
 
     // 多項式
     struct node{

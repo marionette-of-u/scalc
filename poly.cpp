@@ -28,6 +28,10 @@ void node::complex_conjugate(){
 template<class T>
 inline int primitive_compare(const T &lhs, const T &rhs){ return lhs < rhs ? -1 : lhs > rhs ? 1 : 0; }
 
+inline int primitive_lexicographic_compare(const str_wrapper &lhs, const str_wrapper &rhs){
+    return str_wrapper_less()(lhs, rhs);
+}
+
 // note: priority of class
 // R_Only > C_Only > C > R_Onry^E > C_Onry^E > C^E
 int lexicographic_compare(const node *l, const node *r){
@@ -76,7 +80,7 @@ int lexicographic_compare(const node *l, const node *r){
                 result = lexicographic_compare(l_iter->second, r_iter->second);
                 if(result != 0){ break; }
             }else{
-                result = -primitive_compare(l_iter->first, r_iter->first);
+                result = -primitive_lexicographic_compare(l_iter->first, r_iter->first);
                 break;
             }
         }
@@ -252,7 +256,7 @@ void add(node *p, node *q){
                         break;
                     }
                 }else{
-                    compare_result = -primitive_compare(l_iter->first, r_iter->first);
+                    compare_result = -primitive_lexicographic_compare(l_iter->first, r_iter->first);
                     if(compare_result < 0){
                         ep = nullptr;
                         eq = r_iter->second;
@@ -340,7 +344,7 @@ node *multiply(const node *x, const node *y){
                             eq = nullptr;
                         }
                     }else{
-                        compare_result = -primitive_compare(l_iter->first, r_iter->first);
+                        compare_result = -primitive_lexicographic_compare(l_iter->first, r_iter->first);
                         if(compare_result < 0){
                             ep = nullptr;
                             eq = r_iter->second;

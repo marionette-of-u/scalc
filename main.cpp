@@ -58,7 +58,10 @@ namespace analyzer{
         }
 
         // ローカル引数に仮引数を登録する
-        void regiser_local_arg(const symbol *ptr, const eval_target *target);
+        void register_local_arg(const symbol *ptr, const eval_target *target);
+
+        // 定数を登録する
+        void register_let_value(const symbol *ptr, const eval_target *target);
 
     private:
         // 計算の中途結果が入るstack
@@ -132,8 +135,12 @@ namespace analyzer{
         str_wrapper s;
     };
 
-    void semantic_data::regiser_local_arg(const symbol *ptr, const eval_target *target){
+    void semantic_data::register_local_arg(const symbol *ptr, const eval_target *target){
         local_args.back().insert(std::make_pair(ptr->s, target));
+    }
+
+    void semantic_data::register_let_value(const symbol *ptr, const eval_target *target){
+        global_variable_map[ptr->s] = target;
     }
 
     stack_element semantic_data::pop_stack(){
@@ -290,6 +297,10 @@ namespace analyzer{
             return str;
         }
 
+        virtual void eval(semantic_data &sd) const{
+            sd.register_let_value(s.get(), e.get());
+        }
+
         // 左辺 記号
         std::unique_ptr<symbol> s;
 
@@ -302,6 +313,12 @@ namespace analyzer{
 
         virtual std::string ast_str() const{
             return "";
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            for(const equality_sequence *ptr = head; ptr; ptr = ptr->next.get()){
+                ptr->e->eval(sd);
+            }
         }
 
         // 等式
@@ -327,6 +344,11 @@ namespace analyzer{
                 }
             }
             return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            if(w){ w->eval(sd); }
+            e->eval(sd);
         }
 
         // 評価対象の式
@@ -463,9 +485,7 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 3"
-            //"(a b -> (a 1 2) + (b 3 4)) (a b -> a / b) (a b -> a * b)"
-            //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
+            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((a -> 2 * a) 4) where p = 1, q = 2, r = (a b c -> a + b + c)"
         };
 
         if(argc != 2){ return 0; }
@@ -550,7 +570,7 @@ int main(){
         }
         std::cout << root->ast_str() << std::endl;
         semantic_data sd;
-        static_cast<const statement*>(root)->e->eval(sd);
+        root->eval(sd);
     }
 
     //{

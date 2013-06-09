@@ -34,7 +34,7 @@
     ;
 
   Equality<analyzer::equality*>
-    : [make_equality] symbol(0) equal Sequence(1)
+    : [make_equality] symbol(0) equal BaseExpr(1)
     ;
 
   Sequence<analyzer::sequence*>

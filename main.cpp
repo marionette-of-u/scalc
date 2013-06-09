@@ -26,37 +26,69 @@ namespace analyzer{
     struct eval_target;
     struct symbol;
 
+    struct stack_element{
+        stack_element() : node(nullptr), v(nullptr){}
+        poly::node *node;
+        const eval_target *v;
+    };
+
     class semantic_data{
     public:
         // スタックに計算結果を積む
         void push_stack(poly::node *ptr);
+        // スタックに評価前のを積む
+        void push_stack(const eval_target *ptr);
 
         // スタックから計算結果を取り出す
-        poly::node *pop_stack();
+        stack_element pop_stack();
 
         // 記号が変数かどうかを問い合わせる
-        // 変数であれば値を返し、そうでなければ入力記号を返す
-        eval_target *inquiry(symbol *s);
+        // 変数であれば値を返し, そうでなければ入力記号を返す
+        const eval_target *inquiry_symbol(const symbol *s);
+
+        // ローカル引数の領域を新たに生成する
+        std::map<str_wrapper, const eval_target*> &push_local_args(){
+            local_args.push_back(std::map<str_wrapper, const eval_target*>());
+            return local_args.back();
+        }
+
+        // ローカル引数の最も新しい領域を破棄する
+        void pop_local_args(){
+            local_args.pop_back();
+        }
+
+        // ローカル引数に仮引数を登録する
+        void regiser_local_arg(const symbol *ptr, const eval_target *target);
 
     private:
         // 計算の中途結果が入るstack
-        std::vector<poly::node*> stack;
+        std::vector<stack_element> stack;
 
         // local args
-        std::vector<std::map<str_wrapper, eval_target*>> local_args;
+        std::vector<std::map<str_wrapper, const eval_target*>> local_args;
 
         // global variable
-        std::map<str_wrapper, eval_target*> global_variable_map;
+        std::map<str_wrapper, const eval_target*> global_variable_map;
     };
 
     void semantic_data::push_stack(poly::node *ptr){
-        stack.push_back(ptr);
+        stack_element a;
+        a.node = ptr;
+        stack.push_back(a);
+    }
+
+    void semantic_data::push_stack(const eval_target *ptr){
+        stack_element a;
+        a.v = ptr;
+        stack.push_back(a);
     }
 
     struct eval_target{
         virtual ~eval_target(){}
         virtual std::string ast_str() const = 0;
-        virtual void eval(semantic_data&) const{}
+        virtual void eval(semantic_data&) const{
+            throw(error("missing eval function."));
+        }
     };
 
     struct value : eval_target{
@@ -65,6 +97,18 @@ namespace analyzer{
             ss << v;
             if(!real){ ss << "i"; }
             return ss.str();
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            poly::node *ptr = poly::constant(1, 1);
+            if(real){
+                ptr->next->real = v;
+                ptr->next->imag = 0;
+            }else{
+                ptr->next->real = 0;
+                ptr->next->imag = v;
+            }
+            sd.push_stack(ptr);
         }
 
         fpoint v;
@@ -76,16 +120,32 @@ namespace analyzer{
             return *s.ptr;
         }
 
+        virtual void eval(semantic_data &sd) const{
+            const eval_target *ptr = sd.inquiry_symbol(this);
+            if(ptr != this){
+                ptr->eval(sd);
+            }else{
+                sd.push_stack(poly::variable(*s.ptr));
+            }
+        }
+
         str_wrapper s;
     };
 
-    poly::node *semantic_data::pop_stack(){
-        poly::node *ptr = stack.back();
-        stack.pop_back();
-        return ptr;
+    void semantic_data::regiser_local_arg(const symbol *ptr, const eval_target *target){
+        local_args.back().insert(std::make_pair(ptr->s, target));
     }
 
-    eval_target *semantic_data::inquiry(symbol *s){
+    stack_element semantic_data::pop_stack(){
+        if(stack.empty()){
+            throw(error("stack is empty."));
+        }
+        stack_element a = stack.back();
+        stack.pop_back();
+        return a;
+    }
+
+    const eval_target *semantic_data::inquiry_symbol(const symbol *s){
         for(auto iter = local_args.rbegin(); iter != local_args.rend(); ++iter){
             auto jter = iter->find(s->s);
             if(jter != iter->end()){ return jter->second; }
@@ -106,8 +166,36 @@ namespace analyzer{
             return str;
         }
 
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is lambda expression, in binary operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            if(op_s == "+"){
+                poly::add(r, l);
+                sd.push_stack(r);
+            }else if(op_s == "-"){
+                poly::sub(r, l);
+                sd.push_stack(r);
+            }else if(op_s == "*"){
+                sd.push_stack(poly::multiply(r, l));
+                poly::dispose(l);
+                poly::dispose(r);
+            }else if(op_s == "/" || op_s == "//"){
+                sd.push_stack(poly::divide(l, r, nullptr));
+                poly::dispose(l);
+                poly::dispose(r);
+            }else if(op_s == "^"){
+                sd.push_stack(poly::power(l, r));
+                poly::dispose(l);
+                poly::dispose(r);
+            }
+        }
+
         str_wrapper op_s;
-        std::function<eval_target*(const eval_target*, const eval_target*)> op_fn;
         std::unique_ptr<eval_target> lhs, rhs;
     };
 
@@ -118,6 +206,16 @@ namespace analyzer{
             return "-" + operand->ast_str();
         }
 
+        virtual void eval(semantic_data &sd) const{
+            operand->eval(sd);
+            stack_element a = sd.pop_stack();
+            if(!a.node){
+                throw(error("operand is lambda expression, in negative operator."));
+            }
+            a.node->negate();
+            sd.push_stack(a.node);
+        }
+
         std::unique_ptr<eval_target> operand;
     };
 
@@ -126,12 +224,19 @@ namespace analyzer{
 
         virtual std::string ast_str() const{
             std::string str;
-            str += "(";
+            str += "(seq";
             for(const sequence *ptr = head; ptr; ptr = ptr->next.get()){
-                str += (ptr != head ? " " : "") + ptr->e->ast_str();
+                str += " " + ptr->e->ast_str();
             }
             str += ")";
             return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            for(const sequence *ptr = head->next.get(); ptr; ptr = ptr->next.get()){
+                ptr->e->eval(sd);
+            }
+            sd.push_stack(head->e.get());
         }
 
         // 評価対象の式
@@ -145,7 +250,7 @@ namespace analyzer{
     };
 
     struct lambda : sequence{
-        lambda() : args(nullptr), name("lambda_" + to_string(lambda_counter())){}
+        lambda() : args(nullptr), name(to_string(lambda_counter()) + "_lambda"){}
 
         virtual std::string ast_str() const{
             std::string str;
@@ -153,8 +258,12 @@ namespace analyzer{
             for(const sequence *ptr = args->head; ptr; ptr = ptr->next.get()){
                 str += " " + ptr->e->ast_str();
             }
-            str += " -> " + e->ast_str() + ")";
+            str += " -> " + e->ast_str();
             return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            sd.push_stack(this);
         }
 
         // lambda式の引数
@@ -246,8 +355,7 @@ namespace analyzer{
     };
 
 
-    // ---- semantic action.
-
+    // ---- semantic action
     class semantic_action{
     public:
         void syntax_error(){
@@ -355,7 +463,8 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "a b -> a + b"
+            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 3"
+            //"(a b -> (a 1 2) + (b 3 4)) (a b -> a / b) (a b -> a * b)"
             //"let hogepiyo = q_fn 512 * -512 * -1024 // -512 (a b -> a + b) c d"
         };
 
@@ -426,7 +535,7 @@ int main(){
                 default:
                     target_ptr = nullptr;
                 }
-        
+
                 if(p.post(t, target_ptr)){ break; }
             }
             p.post(parser::token_0, target_ptr);
@@ -440,6 +549,8 @@ int main(){
             return 0;
         }
         std::cout << root->ast_str() << std::endl;
+        semantic_data sd;
+        static_cast<const statement*>(root)->e->eval(sd);
     }
 
     //{
@@ -470,51 +581,51 @@ int main(){
     //}
     //std::cout << "----" << std::endl;
 
-    {
-        using namespace poly;
-        node *l = variable("x", 2);
-        l = multiply(l, variable("y", 3));
-        l = multiply(l, variable("z", 4));
-        l = multiply(l, constant(1.5, 0.5));
-        add(l, variable("x", 2));
+    //{
+    //    using namespace poly;
+    //    node *l = variable("x", 2);
+    //    l = multiply(l, variable("y", 3));
+    //    l = multiply(l, variable("z", 4));
+    //    l = multiply(l, constant(1.5, 0.5));
+    //    add(l, variable("x", 2));
 
-        node *r = variable("x");
-        r = multiply(r, variable("y"));
-        add(r, constant(2, 3));
-        add(r, variable("y", 3));
+    //    node *r = variable("x");
+    //    r = multiply(r, variable("y"));
+    //    add(r, constant(2, 3));
+    //    add(r, variable("y", 3));
 
-        node *rem = new_node();
-        node *q = divide(l, r, rem);
-        std::cout << poly_to_string(l) << std::endl;
-        std::cout << poly_to_string(r) << std::endl;
-        std::cout << poly_to_string(q) << std::endl;
-        std::cout << poly_to_string(rem) << std::endl;
-    }
-    std::cout << "----" << std::endl;
+    //    node *rem = new_node();
+    //    node *q = divide(l, r, rem);
+    //    std::cout << poly_to_string(l) << std::endl;
+    //    std::cout << poly_to_string(r) << std::endl;
+    //    std::cout << poly_to_string(q) << std::endl;
+    //    std::cout << poly_to_string(rem) << std::endl;
+    //}
+    //std::cout << "----" << std::endl;
 
-    {
-        using namespace poly;
-        node *l = variable("x", 2);
-        l = multiply(l, variable("y", 3));
-        l = multiply(l, variable("z", 4));
-        l = multiply(l, constant(1.5, 0.5));
-        add(l, variable("x", 2));
+    //{
+    //    using namespace poly;
+    //    node *l = variable("x", 2);
+    //    l = multiply(l, variable("y", 3));
+    //    l = multiply(l, variable("z", 4));
+    //    l = multiply(l, constant(1.5, 0.5));
+    //    add(l, variable("x", 2));
 
-        node *r = copy(l);
+    //    node *r = copy(l);
 
-        add(l, copy(l));
-        add(l, copy(l));
-        add(l, copy(l));
-        add(l, copy(l));
-        add(l, copy(l));
+    //    add(l, copy(l));
+    //    add(l, copy(l));
+    //    add(l, copy(l));
+    //    add(l, copy(l));
+    //    add(l, copy(l));
 
-        node *rem = new_node();
-        node *q = divide(r, l, rem);
-        std::cout << poly_to_string(r) << std::endl;
-        std::cout << poly_to_string(l) << std::endl;
-        std::cout << poly_to_string(q) << std::endl;
-        std::cout << poly_to_string(rem) << std::endl;
-    }
+    //    node *rem = new_node();
+    //    node *q = divide(r, l, rem);
+    //    std::cout << poly_to_string(r) << std::endl;
+    //    std::cout << poly_to_string(l) << std::endl;
+    //    std::cout << poly_to_string(q) << std::endl;
+    //    std::cout << poly_to_string(rem) << std::endl;
+    //}
 
     return 0;
 }

@@ -37,11 +37,14 @@ namespace analyzer{
         // スタックに計算結果を積む
         void push_stack(poly::node *ptr);
 
-        // スタックに評価前のを積む
+        // スタックに評価前の値を積む
         void push_stack(const eval_target *ptr);
 
         // スタックから計算結果を取り出す
         stack_element pop_stack();
+
+        // スタックの中身を逆順に得る
+        stack_element r_access(std::size_t i) const;
 
         bool empty() const{
             return stack.empty();
@@ -129,11 +132,7 @@ namespace analyzer{
 
         virtual void eval(semantic_data &sd) const{
             stack_element se = sd.inquiry_symbol(this);
-            if(se.v){
-                sd.push_stack(se.v);
-            }else{
-                sd.push_stack(se.node);
-            }
+            if(se.node){ sd.push_stack(se.node); }
         }
 
         str_wrapper s;
@@ -154,6 +153,10 @@ namespace analyzer{
         stack_element a = stack.back();
         stack.pop_back();
         return a;
+    }
+
+    stack_element semantic_data::r_access(std::size_t i) const{
+        return stack[stack.size() - i - 1];
     }
 
     const stack_element semantic_data::inquiry_symbol(const symbol *s){
@@ -305,15 +308,14 @@ namespace analyzer{
     };
 
     void sequence::call(semantic_data &sd) const{
-        std::size_t n = 0;
+        std::size_t n = 0, i = 0;
         sd.push_local_args();
-        for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args.get(); ptr; ptr = ptr->next.get(), ++n){
+        for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++n, ++i){
             stack_element se = sd.pop_stack();
             if(se.v && !dynamic_cast<const lambda*>(se.v) && dynamic_cast<const sequence*>(se.v)){
                 static_cast<const sequence*>(se.v)->call(sd);
-            }else{
-                sd.register_local_arg(static_cast<const symbol*>(ptr->e.get()), se);
             }
+            sd.register_local_arg(static_cast<const symbol*>(ptr->e.get()), se);
         }
         static_cast<const sequence*>(head->e.get())->e->eval(sd);
         sd.pop_local_args();

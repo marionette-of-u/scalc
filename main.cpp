@@ -232,6 +232,8 @@ namespace analyzer{
         std::unique_ptr<eval_target> operand;
     };
 
+    struct lambda;
+
     struct sequence : eval_target{
         sequence() : e(nullptr), next(nullptr), head(nullptr){}
 
@@ -255,6 +257,8 @@ namespace analyzer{
             }
             sd.push_stack(head->e.get());
         }
+
+        virtual void call(semantic_data &sd) const;
 
         // 評価対象の式
         std::unique_ptr<eval_target> e;
@@ -283,6 +287,10 @@ namespace analyzer{
             sd.push_stack(this);
         }
 
+        virtual void call(semantic_data &sd) const{
+            head->e->eval(sd);
+        }
+
         // lambda式の引数
         std::unique_ptr<sequence> args;
 
@@ -295,6 +303,21 @@ namespace analyzer{
             return i++;
         }
     };
+
+    void sequence::call(semantic_data &sd) const{
+        std::size_t n = 0;
+        sd.push_local_args();
+        for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args.get(); ptr; ptr = ptr->next.get(), ++n){
+            stack_element se = sd.pop_stack();
+            if(se.v && !dynamic_cast<const lambda*>(se.v) && dynamic_cast<const sequence*>(se.v)){
+                static_cast<const sequence*>(se.v)->call(sd);
+            }else{
+                sd.register_local_arg(static_cast<const symbol*>(ptr->e.get()), se);
+            }
+        }
+        static_cast<const sequence*>(head->e.get())->e->eval(sd);
+        sd.pop_local_args();
+    }
 
     struct equality : eval_target{
         equality() : s(nullptr), e(nullptr){}
@@ -361,6 +384,16 @@ namespace analyzer{
         virtual void eval(semantic_data &sd) const{
             if(w){ w->eval(sd); }
             e->eval(sd);
+        }
+
+        virtual void call(semantic_data &sd) const{
+            for(stack_element se = sd.pop_stack(); !sd.empty(); se = sd.pop_stack()){
+                if(se.node){
+                    std::cout << poly::poly_to_string(se.node) << " ";
+                }else{
+                    se.v->call(sd);
+                }
+            }
         }
 
         // 評価対象の式
@@ -584,6 +617,7 @@ int main(){
         // std::cout << root->ast_str() << std::endl;
         semantic_data sd;
         root->eval(sd);
+        root->call(sd);
     }
 
     //{

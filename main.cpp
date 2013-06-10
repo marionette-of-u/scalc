@@ -36,19 +36,24 @@ namespace analyzer{
     public:
         // スタックに計算結果を積む
         void push_stack(poly::node *ptr);
+
         // スタックに評価前のを積む
         void push_stack(const eval_target *ptr);
 
         // スタックから計算結果を取り出す
         stack_element pop_stack();
 
+        bool empty() const{
+            return stack.empty();
+        }
+
         // 記号が変数かどうかを問い合わせる
         // 変数であれば値を返し, そうでなければ入力記号を返す
-        const eval_target *inquiry_symbol(const symbol *s);
+        const stack_element inquiry_symbol(const symbol *s);
 
         // ローカル引数の領域を新たに生成する
-        std::map<str_wrapper, const eval_target*> &push_local_args(){
-            local_args.push_back(std::map<str_wrapper, const eval_target*>());
+        std::map<str_wrapper, const stack_element> &push_local_args(){
+            local_args.push_back(std::map<str_wrapper, const stack_element>());
             return local_args.back();
         }
 
@@ -58,20 +63,20 @@ namespace analyzer{
         }
 
         // ローカル引数に仮引数を登録する
-        void register_local_arg(const symbol *ptr, const eval_target *target);
+        void register_local_arg(const symbol *ptr, const stack_element target);
 
         // 定数を登録する
-        void register_let_value(const symbol *ptr, const eval_target *target);
+        void register_let_value(const symbol *ptr, const stack_element target);
 
     private:
         // 計算の中途結果が入るstack
         std::vector<stack_element> stack;
 
         // local args
-        std::vector<std::map<str_wrapper, const eval_target*>> local_args;
+        std::vector<std::map<str_wrapper, const stack_element>> local_args;
 
         // global variable
-        std::map<str_wrapper, const eval_target*> global_variable_map;
+        std::map<str_wrapper, stack_element> global_variable_map;
     };
 
     void semantic_data::push_stack(poly::node *ptr){
@@ -89,9 +94,8 @@ namespace analyzer{
     struct eval_target{
         virtual ~eval_target(){}
         virtual std::string ast_str() const = 0;
-        virtual void eval(semantic_data&) const{
-            throw(error("missing eval function."));
-        }
+        virtual void eval(semantic_data&) const{ throw(error("missing eval function.")); }
+        virtual void call(semantic_data&) const{ throw(error("missing call function.")); }
     };
 
     struct value : eval_target{
@@ -124,22 +128,22 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            const eval_target *ptr = sd.inquiry_symbol(this);
-            if(ptr != this){
-                ptr->eval(sd);
+            stack_element se = sd.inquiry_symbol(this);
+            if(se.v){
+                sd.push_stack(se.v);
             }else{
-                sd.push_stack(poly::variable(*s.ptr));
+                sd.push_stack(se.node);
             }
         }
 
         str_wrapper s;
     };
 
-    void semantic_data::register_local_arg(const symbol *ptr, const eval_target *target){
+    void semantic_data::register_local_arg(const symbol *ptr, const stack_element target){
         local_args.back().insert(std::make_pair(ptr->s, target));
     }
 
-    void semantic_data::register_let_value(const symbol *ptr, const eval_target *target){
+    void semantic_data::register_let_value(const symbol *ptr, const stack_element target){
         global_variable_map[ptr->s] = target;
     }
 
@@ -152,14 +156,16 @@ namespace analyzer{
         return a;
     }
 
-    const eval_target *semantic_data::inquiry_symbol(const symbol *s){
+    const stack_element semantic_data::inquiry_symbol(const symbol *s){
         for(auto iter = local_args.rbegin(); iter != local_args.rend(); ++iter){
             auto jter = iter->find(s->s);
             if(jter != iter->end()){ return jter->second; }
         }
         auto iter = global_variable_map.find(s->s);
         if(iter != global_variable_map.end()){ return iter->second; }
-        return s;
+        stack_element se;
+        se.v = s;
+        return se;
     }
 
     struct binary_operator : eval_target{
@@ -240,6 +246,10 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
+            if(head == this){
+                e->eval(sd);
+                return;
+            }
             for(const sequence *ptr = head->next.get(); ptr; ptr = ptr->next.get()){
                 ptr->e->eval(sd);
             }
@@ -298,7 +308,9 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            sd.register_let_value(s.get(), e.get());
+            stack_element se;
+            se.v = e.get();
+            sd.register_let_value(s.get(), se);
         }
 
         // 左辺 記号
@@ -485,7 +497,8 @@ int main(){
         int argc = 2;
         char *argv[] = {
             "dummy.exe",
-            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((a -> 2 * a) 4) where p = 1, q = 2, r = (a b c -> a + b + c)"
+            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((p -> 3 * p) 4)"
+            //"(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((a -> 2 * a) 4) where p = 1, q = 2, r = (a b c -> a + b + c)"
         };
 
         if(argc != 2){ return 0; }
@@ -568,7 +581,7 @@ int main(){
             std::cout << "parsing error.";
             return 0;
         }
-        std::cout << root->ast_str() << std::endl;
+        // std::cout << root->ast_str() << std::endl;
         semantic_data sd;
         root->eval(sd);
     }

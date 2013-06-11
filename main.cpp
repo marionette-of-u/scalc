@@ -79,7 +79,7 @@ namespace analyzer{
         std::vector<std::map<str_wrapper, const stack_element>> local_args;
 
         // global variable
-        std::map<str_wrapper, stack_element> global_variable_map;
+        std::map<str_wrapper, const stack_element> global_variable_map;
     };
 
     void semantic_data::push_stack(poly::node *ptr){
@@ -98,7 +98,6 @@ namespace analyzer{
         virtual ~eval_target(){}
         virtual std::string ast_str() const = 0;
         virtual void eval(semantic_data&) const{ throw(error("missing eval function.")); }
-        virtual void call(semantic_data&) const{ throw(error("missing call function.")); }
     };
 
     struct value : eval_target{
@@ -110,13 +109,11 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            poly::node *ptr = poly::constant(1, 1);
+            poly::node *ptr;
             if(real){
-                ptr->next->real = v;
-                ptr->next->imag = 0;
+                ptr = poly::constant(v, 0);
             }else{
-                ptr->next->real = 0;
-                ptr->next->imag = v;
+                ptr = poly::constant(0, v);
             }
             sd.push_stack(ptr);
         }
@@ -132,7 +129,11 @@ namespace analyzer{
 
         virtual void eval(semantic_data &sd) const{
             stack_element se = sd.inquiry_symbol(this);
-            if(se.node){ sd.push_stack(se.node); }
+            if(se.node){
+                sd.push_stack(se.node);
+            }else{
+                sd.push_stack(poly::variable(*s.ptr));
+            }
         }
 
         str_wrapper s;
@@ -143,7 +144,7 @@ namespace analyzer{
     }
 
     void semantic_data::register_let_value(const symbol *ptr, const stack_element target){
-        global_variable_map[ptr->s] = target;
+        global_variable_map.insert(std::make_pair(ptr->s, target));
     }
 
     stack_element semantic_data::pop_stack(){
@@ -261,8 +262,6 @@ namespace analyzer{
             sd.push_stack(head->e.get());
         }
 
-        virtual void call(semantic_data &sd) const;
-
         // 評価対象の式
         std::unique_ptr<eval_target> e;
 
@@ -290,10 +289,6 @@ namespace analyzer{
             sd.push_stack(this);
         }
 
-        virtual void call(semantic_data &sd) const{
-            head->e->eval(sd);
-        }
-
         // lambda式の引数
         std::unique_ptr<sequence> args;
 
@@ -307,35 +302,6 @@ namespace analyzer{
         }
     };
 
-    void sequence::call(semantic_data &sd) const{
-        std::size_t n = 0, i = 0;
-
-        {
-            // count & allocate
-            for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++n);
-            std::vector<std::pair<const symbol*, stack_element>> r_array(n);
-
-            // eval & call
-            for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++i){
-                for(; ; ){
-                    stack_element se = sd.pop_stack();
-                    if(se.v && dynamic_cast<const sequence*>(se.v) && dynamic_cast<const lambda*>(static_cast<const sequence*>(se.v)->e.get())){
-                        static_cast<const lambda*>(static_cast<const sequence*>(se.v)->e.get())->call(sd);
-                        continue;
-                    }
-                    r_array[n - i - 1].first = static_cast<const symbol*>(ptr->e.get());
-                    r_array[i].second  = se;
-                    break;
-                }
-            }
-            sd.push_local_args();
-            for(i = 0; i < n; ++i){ sd.register_local_arg(r_array[i].first, r_array[i].second); }
-        }
-
-        static_cast<const sequence*>(head->e.get())->e->eval(sd);
-        sd.pop_local_args();
-    }
-
     struct equality : eval_target{
         equality() : s(nullptr), e(nullptr){}
 
@@ -348,8 +314,8 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            stack_element se;
-            se.v = e.get();
+            e->eval(sd);
+            stack_element se = sd.pop_stack();
             sd.register_let_value(s.get(), se);
         }
 
@@ -399,18 +365,9 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            if(w){ w->eval(sd); }
+            // disable where-statement.
+            // if(w){ w->eval(sd); }
             e->eval(sd);
-        }
-
-        virtual void call(semantic_data &sd) const{
-            for(stack_element se = sd.pop_stack(); !sd.empty(); se = sd.pop_stack()){
-                if(se.node){
-                    std::cout << poly::poly_to_string(se.node) << " ";
-                }else{
-                    se.v->call(sd);
-                }
-            }
         }
 
         // 評価対象の式
@@ -542,15 +499,8 @@ namespace analyzer{
     };
 }
 
-int main(){
-    {
-        int argc = 2;
-        char *argv[] = {
-            "dummy.exe",
-            "(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((p -> 3 * p) 4)"
-            //"(a b c d -> a b c d) (x y z -> x + y + z) 1 2 ((a -> 2 * a) 4) where p = 1, q = 2, r = (a b c -> a + b + c)"
-        };
-
+int main(int argc, char *argv[]){
+    try{
         if(argc != 2){ return 0; }
         statement_str target_str;
         lex_data::token_sequence token_sequence;
@@ -631,85 +581,14 @@ int main(){
             std::cout << "parsing error.";
             return 0;
         }
-        // std::cout << root->ast_str() << std::endl;
         semantic_data sd;
         root->eval(sd);
-        root->call(sd);
+        poly::node *q = sd.pop_stack().node;
+        std::cout << poly::poly_to_string(q) << std::endl;
+        poly::dispose(q);
+    }catch(std::runtime_error &e){
+        std::cout << e.what() << std::endl;
     }
-
-    //{
-    //    using namespace poly;
-    //    node *n = new_node(), *m = new_node();
-    //    add(n, variable("x", variable("y", variable("z"))));
-    //    node *o = power(n, variable("x", variable("y", variable("w"))));
-    //    std::cout << poly_to_string(o) << std::endl;
-    //}
-
-    //{
-    //    using namespace poly;
-    //    node *n = new_node(), *m = new_node();
-    //    add(n, variable("x", variable("y", variable("z"))));
-    //    node *o = power(n, constant(0, 1));
-    //    std::cout << poly_to_string(o) << std::endl;
-    //}
-    //std::cout << "----" << std::endl;
-
-    //{
-    //    using namespace poly;
-    //    node *l = constant(2.2, 3.3);
-    //    add(l, variable("x"));
-    //    l = multiply(l, variable("y"));
-    //    l = power(l, constant(3));
-
-    //    std::cout << poly_to_string(l) << std::endl;
-    //}
-    //std::cout << "----" << std::endl;
-
-    //{
-    //    using namespace poly;
-    //    node *l = variable("x", 2);
-    //    l = multiply(l, variable("y", 3));
-    //    l = multiply(l, variable("z", 4));
-    //    l = multiply(l, constant(1.5, 0.5));
-    //    add(l, variable("x", 2));
-
-    //    node *r = variable("x");
-    //    r = multiply(r, variable("y"));
-    //    add(r, constant(2, 3));
-    //    add(r, variable("y", 3));
-
-    //    node *rem = new_node();
-    //    node *q = divide(l, r, rem);
-    //    std::cout << poly_to_string(l) << std::endl;
-    //    std::cout << poly_to_string(r) << std::endl;
-    //    std::cout << poly_to_string(q) << std::endl;
-    //    std::cout << poly_to_string(rem) << std::endl;
-    //}
-    //std::cout << "----" << std::endl;
-
-    //{
-    //    using namespace poly;
-    //    node *l = variable("x", 2);
-    //    l = multiply(l, variable("y", 3));
-    //    l = multiply(l, variable("z", 4));
-    //    l = multiply(l, constant(1.5, 0.5));
-    //    add(l, variable("x", 2));
-
-    //    node *r = copy(l);
-
-    //    add(l, copy(l));
-    //    add(l, copy(l));
-    //    add(l, copy(l));
-    //    add(l, copy(l));
-    //    add(l, copy(l));
-
-    //    node *rem = new_node();
-    //    node *q = divide(r, l, rem);
-    //    std::cout << poly_to_string(r) << std::endl;
-    //    std::cout << poly_to_string(l) << std::endl;
-    //    std::cout << poly_to_string(q) << std::endl;
-    //    std::cout << poly_to_string(rem) << std::endl;
-    //}
 
     return 0;
 }

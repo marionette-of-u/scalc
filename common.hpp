@@ -8,6 +8,7 @@
 #include <string>
 #include <typeinfo>
 #include <iostream>
+#include <stdexcept>
 
 typedef double fpoint;
 
@@ -26,7 +27,7 @@ typedef std::vector<char> statement_str;
 class error : public std::runtime_error{
 public:
     inline error(std::string message) throw() : std::runtime_error(message){} 
-    inline error(const error &other) throw(): runtime_error(other){}
+    inline error(const error &other) throw() : runtime_error(other){}
     inline virtual ~error() throw(){}
     inline error &operator =(const error &other) throw(){
         std::runtime_error::operator =(other);

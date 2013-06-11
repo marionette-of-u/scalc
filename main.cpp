@@ -9,18 +9,6 @@
 #include <exception>
 #include <cstring>
 #include "common.hpp"
-#include "parser.hpp"
-
-namespace lex_data{
-    // 字句解析結果のrange
-    typedef std::pair<statement_str::const_iterator, statement_str::const_iterator> token_range;
-
-    // 字句解析結果のtoken種別と範囲
-    typedef std::pair<lexer::token, token_range> lex_result;
-
-    // 字句解析結果
-    typedef std::vector<lex_result> token_sequence;
-}
 
 namespace analyzer{
     struct eval_target;
@@ -497,6 +485,19 @@ namespace analyzer{
             return subtree;
         }
     };
+}
+
+#include "parser.hpp"
+
+namespace lex_data{
+    // 字句解析結果のrange
+    typedef std::pair<statement_str::const_iterator, statement_str::const_iterator> token_range;
+
+    // 字句解析結果のtoken種別と範囲
+    typedef std::pair<lexer::token, token_range> lex_result;
+
+    // 字句解析結果
+    typedef std::vector<lex_result> token_sequence;
 }
 
 int main(int argc, char *argv[]){

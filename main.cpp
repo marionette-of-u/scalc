@@ -309,14 +309,29 @@ namespace analyzer{
 
     void sequence::call(semantic_data &sd) const{
         std::size_t n = 0, i = 0;
-        sd.push_local_args();
-        for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++n, ++i){
-            stack_element se = sd.pop_stack();
-            if(se.v && !dynamic_cast<const lambda*>(se.v) && dynamic_cast<const sequence*>(se.v)){
-                static_cast<const sequence*>(se.v)->call(sd);
+
+        {
+            // count & allocate
+            for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++n);
+            std::vector<std::pair<const symbol*, stack_element>> r_array(n);
+
+            // eval & call
+            for(const sequence *ptr = static_cast<const lambda*>(head->e.get())->args->head; ptr; ptr = ptr->next.get(), ++i){
+                for(; ; ){
+                    stack_element se = sd.pop_stack();
+                    if(se.v && dynamic_cast<const sequence*>(se.v) && dynamic_cast<const lambda*>(static_cast<const sequence*>(se.v)->e.get())){
+                        static_cast<const lambda*>(static_cast<const sequence*>(se.v)->e.get())->call(sd);
+                        continue;
+                    }
+                    r_array[n - i - 1].first = static_cast<const symbol*>(ptr->e.get());
+                    r_array[i].second  = se;
+                    break;
+                }
             }
-            sd.register_local_arg(static_cast<const symbol*>(ptr->e.get()), se);
+            sd.push_local_args();
+            for(i = 0; i < n; ++i){ sd.register_local_arg(r_array[i].first, r_array[i].second); }
         }
+
         static_cast<const sequence*>(head->e.get())->e->eval(sd);
         sd.pop_local_args();
     }

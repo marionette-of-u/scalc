@@ -38,12 +38,12 @@
     ;
 
   BaseExpr<analyzer::eval_target*>
-    : [make_binary_op] BaseExpr(1) plus(0) BaseExpr(2)
-    | [make_binary_op] BaseExpr(1) minus(0) BaseExpr(2)
-    | [make_binary_op] BaseExpr(1) asterisk(0) BaseExpr(2)
-    | [make_binary_op] BaseExpr(1) slash(0) BaseExpr(2)
-    | [make_binary_op] BaseExpr(1) hat(0) BaseExpr(2)
-    | [make_binary_op] BaseExpr(1) double_slash(0) BaseExpr(2)
+    : [make_add] BaseExpr(0) plus BaseExpr(1)
+    | [make_sub] BaseExpr(0) minus BaseExpr(1)
+    | [make_mul] BaseExpr(0) asterisk BaseExpr(1)
+    | [make_div] BaseExpr(0) slash BaseExpr(1)
+    | [make_pow] BaseExpr(0) hat BaseExpr(1)
+    | [make_div] BaseExpr(0) double_slash BaseExpr(1)
     | [make_negate_expr] <unary_minus> minus BaseExpr(0)
     | [identity] <unary_plus> plus BaseExpr(0)
     | [identity] left_paren BaseExpr(0) right_paren

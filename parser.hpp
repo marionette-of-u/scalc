@@ -276,12 +276,55 @@ private:
         return (this->*(stack_top()->gotof))(nonterminal_index, v);
     }
 
-    bool call_0_make_binary_op(int nonterminal_index, int base, int arg_index0, int arg_index1, int arg_index2)
+    bool call_0_make_div(int nonterminal_index, int base, int arg_index0, int arg_index1)
     {
-        analyzer::binary_operator* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
         analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
-        analyzer::eval_target* arg2; sa_.downcast(arg2, get_arg(base, arg_index2));
-        analyzer::eval_target* r = sa_.make_binary_op(arg0, arg1, arg2);
+        analyzer::eval_target* r = sa_.make_div(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_pow(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.make_pow(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_mul(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.make_mul(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_add(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.make_add(arg0, arg1);
+        value_type v = value_type();
+        sa_.upcast(v, r);
+        pop_stack(base);
+        return (this->*(stack_top()->gotof))(nonterminal_index, v);
+    }
+
+    bool call_0_make_sub(int nonterminal_index, int base, int arg_index0, int arg_index1)
+    {
+        analyzer::eval_target* arg0; sa_.downcast(arg0, get_arg(base, arg_index0));
+        analyzer::eval_target* arg1; sa_.downcast(arg1, get_arg(base, arg_index1));
+        analyzer::eval_target* r = sa_.make_sub(arg0, arg1);
         value_type v = value_type();
         sa_.upcast(v, r);
         pop_stack(base);
@@ -1127,7 +1170,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_div(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1160,7 +1203,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_pow(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1193,7 +1236,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_mul(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1226,7 +1269,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_div(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1265,7 +1308,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_add(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;
@@ -1304,7 +1347,7 @@ private:
         case token_comma:
         case token_keyword_where:
         case token_0:
-            return call_0_make_binary_op(2, 3, 1, 0, 2);
+            return call_0_make_sub(2, 3, 0, 2);
         default:
             sa_.syntax_error();
             error_ = true;

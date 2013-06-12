@@ -22,6 +22,10 @@ namespace analyzer{
 
     class semantic_data{
     public:
+        semantic_data() : stack(), local_args(), global_variable_map(){}
+
+        ~semantic_data();
+
         // スタックに計算結果を積む
         void push_stack(poly::node *ptr);
 
@@ -67,7 +71,7 @@ namespace analyzer{
         std::vector<std::map<str_wrapper, const stack_element>> local_args;
 
         // global variable
-        std::map<str_wrapper, const stack_element> global_variable_map;
+        std::map<str_wrapper, stack_element> global_variable_map;
     };
 
     void semantic_data::push_stack(poly::node *ptr){
@@ -87,6 +91,16 @@ namespace analyzer{
         virtual std::string ast_str() const = 0;
         virtual void eval(semantic_data&) const{ throw(error("missing eval function.")); }
     };
+
+    semantic_data::~semantic_data(){
+        for(auto iter = global_variable_map.begin(); iter != global_variable_map.end(); ++iter){
+            if(iter->second.node){
+                poly::dispose(iter->second.node);
+            }else{
+                delete iter->second.v;
+            }
+        }
+    }
 
     struct value : eval_target{
         virtual std::string ast_str() const{
@@ -118,7 +132,7 @@ namespace analyzer{
         virtual void eval(semantic_data &sd) const{
             stack_element se = sd.inquiry_symbol(this);
             if(se.node){
-                sd.push_stack(se.node);
+                sd.push_stack(poly::copy(se.node));
             }else{
                 sd.push_stack(poly::variable(*s.ptr));
             }
@@ -163,10 +177,43 @@ namespace analyzer{
     struct binary_operator : eval_target{
         binary_operator() : lhs(nullptr), rhs(nullptr){}
 
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is value, in binary operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            //if(op_s == "+"){
+            //    poly::add(l, r);
+            //    sd.push_stack(l);
+            //}else if(op_s == "-"){
+            //    poly::sub(l, r);
+            //    sd.push_stack(l);
+            //}else if(op_s == "*"){
+            //    sd.push_stack(poly::multiply(r, l));
+            //    poly::dispose(l);
+            //    poly::dispose(r);
+            //}else if(op_s == "/" || op_s == "//"){
+            //    sd.push_stack(poly::divide(l, r, nullptr));
+            //    poly::dispose(l);
+            //    poly::dispose(r);
+            //}else if(op_s == "^"){
+            //    sd.push_stack(poly::power(l, r));
+            //    poly::dispose(l);
+            //    poly::dispose(r);
+            //}
+        }
+
+        std::unique_ptr<eval_target> lhs, rhs;
+    };
+
+    struct binary_operator_add : binary_operator{
         virtual std::string ast_str() const{
             std::string str;
             str += "(";
-            str += *op_s.ptr + " " + lhs->ast_str() + " " + rhs->ast_str();
+            str += "+ " + lhs->ast_str() + " " + rhs->ast_str();
             str += ")";
             return str;
         }
@@ -176,32 +223,103 @@ namespace analyzer{
             rhs->eval(sd);
             stack_element er = sd.pop_stack(), el = sd.pop_stack();
             if(!er.node || !el.node){
-                throw(error("stack element is lambda expression, in binary operator."));
+                throw(error("stack element is value, in add operator."));
             }
             poly::node *l = el.node, *r = er.node;
-            if(op_s == "+"){
-                poly::add(l, r);
-                sd.push_stack(l);
-            }else if(op_s == "-"){
-                poly::sub(l, r);
-                sd.push_stack(l);
-            }else if(op_s == "*"){
-                sd.push_stack(poly::multiply(r, l));
-                poly::dispose(l);
-                poly::dispose(r);
-            }else if(op_s == "/" || op_s == "//"){
-                sd.push_stack(poly::divide(l, r, nullptr));
-                poly::dispose(l);
-                poly::dispose(r);
-            }else if(op_s == "^"){
-                sd.push_stack(poly::power(l, r));
-                poly::dispose(l);
-                poly::dispose(r);
-            }
+            poly::add(l, r);
+            sd.push_stack(l);
+        }
+    };
+
+    struct binary_operator_sub : binary_operator{
+        virtual std::string ast_str() const{
+            std::string str;
+            str += "(";
+            str += "- " + lhs->ast_str() + " " + rhs->ast_str();
+            str += ")";
+            return str;
         }
 
-        str_wrapper op_s;
-        std::unique_ptr<eval_target> lhs, rhs;
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is value, in sub operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            poly::sub(l, r);
+            sd.push_stack(l);
+        }
+    };
+
+    struct binary_operator_mul : binary_operator{
+        virtual std::string ast_str() const{
+            std::string str;
+            str += "(";
+            str += "* " + lhs->ast_str() + " " + rhs->ast_str();
+            str += ")";
+            return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is value, in multiply operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            sd.push_stack(poly::multiply(r, l));
+            poly::dispose(l);
+            poly::dispose(r);
+        }
+    };
+
+    struct binary_operator_div : binary_operator{
+        virtual std::string ast_str() const{
+            std::string str;
+            str += "(";
+            str += "/ " + lhs->ast_str() + " " + rhs->ast_str();
+            str += ")";
+            return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is value, in divide operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            sd.push_stack(poly::divide(l, r, nullptr));
+            poly::dispose(l);
+            poly::dispose(r);
+        }
+    };
+
+    struct binary_operator_pow : binary_operator{
+        virtual std::string ast_str() const{
+            std::string str;
+            str += "(";
+            str += "^ " + lhs->ast_str() + " " + rhs->ast_str();
+            str += ")";
+            return str;
+        }
+
+        virtual void eval(semantic_data &sd) const{
+            lhs->eval(sd);
+            rhs->eval(sd);
+            stack_element er = sd.pop_stack(), el = sd.pop_stack();
+            if(!er.node || !el.node){
+                throw(error("stack element is value, in power operator."));
+            }
+            poly::node *l = el.node, *r = er.node;
+            sd.push_stack(poly::power(l, r));
+            poly::dispose(l);
+            poly::dispose(r);
+        }
     };
 
     struct negate_expr : eval_target{
@@ -215,9 +333,9 @@ namespace analyzer{
             operand->eval(sd);
             stack_element a = sd.pop_stack();
             if(!a.node){
-                throw(error("operand is lambda expression, in negative operator."));
+                throw(error("operand is lambda expression, in neg operator."));
             }
-            a.node->negate();
+            poly::change_sign(a.node);
             sd.push_stack(a.node);
         }
 
@@ -353,8 +471,7 @@ namespace analyzer{
         }
 
         virtual void eval(semantic_data &sd) const{
-            // disable where-statement.
-            // if(w){ w->eval(sd); }
+            if(w){ w->eval(sd); }
             e->eval(sd);
         }
 
@@ -443,7 +560,36 @@ namespace analyzer{
             return ptr;
         }
 
-        eval_target *make_binary_op(binary_operator *e, eval_target *lhs, eval_target *rhs){
+        eval_target *make_add(eval_target *lhs, eval_target *rhs){
+            binary_operator_add *e = new binary_operator_add;
+            e->lhs.reset(lhs);
+            e->rhs.reset(rhs);
+            return e;
+        }
+
+        eval_target *make_sub(eval_target *lhs, eval_target *rhs){
+            binary_operator_sub *e = new binary_operator_sub;
+            e->lhs.reset(lhs);
+            e->rhs.reset(rhs);
+            return e;
+        }
+
+        eval_target *make_mul(eval_target *lhs, eval_target *rhs){
+            binary_operator_mul *e = new binary_operator_mul;
+            e->lhs.reset(lhs);
+            e->rhs.reset(rhs);
+            return e;
+        }
+
+        eval_target *make_div(eval_target *lhs, eval_target *rhs){
+            binary_operator_div *e = new binary_operator_div;
+            e->lhs.reset(lhs);
+            e->rhs.reset(rhs);
+            return e;
+        }
+
+        eval_target *make_pow(eval_target *lhs, eval_target *rhs){
+            binary_operator_pow *e = new binary_operator_pow;
             e->lhs.reset(lhs);
             e->rhs.reset(rhs);
             return e;
@@ -500,8 +646,20 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
-int main(int argc, char *argv[]){
+int main(
+#ifndef _DEBUG
+    int argc, char *argv[]
+#endif
+){
     try{
+#ifdef _DEBUG
+        int argc = 2;
+        char *argv[] = {
+            "dummy",
+            "-1i^-1i"
+        };
+#endif
+
         if(argc != 2){ return 0; }
         statement_str target_str;
         lex_data::token_sequence token_sequence;
@@ -529,59 +687,46 @@ int main(int argc, char *argv[]){
         semantic_action sa;
         eval_target *target_ptr;
         parser::parser<eval_target*, semantic_action> p(sa);
-        try{
-            for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
-                parser::token t = static_cast<parser::token>(iter->first);
-                switch(t){
-                case parser::token_double_slash:
-                case parser::token_hat:
-                case parser::token_asterisk:
-                case parser::token_slash:
-                case parser::token_plus:
-                case parser::token_minus:
-                    {
-                        binary_operator *b = new binary_operator;
-                        b->op_s = std::string(iter->second.first, iter->second.second);
-                        target_ptr = b;
-                    }
-                    break;
-
-                case parser::token_identifier:
-                    {
-                        value *v = new value;
-                        std::stringstream ss;
-                        std::string str(iter->second.first, iter->second.second);
-                        ss << std::string(str);
-                        ss >> v->v;
-                        v->real = str.back() != 'i';
-                        target_ptr = v;
-                    }
-                    break;
-
-                case parser::token_symbol:
-                    {
-                        symbol *s = new symbol;
-                        s->s = std::string(iter->second.first, iter->second.second);
-                        target_ptr = s;
-                    }
-                    break;
-
-                default:
-                    target_ptr = nullptr;
+        for(auto iter = token_sequence.begin(); iter != token_sequence.end(); ++iter){
+            parser::token t = static_cast<parser::token>(iter->first);
+            switch(t){
+            case parser::token_identifier:
+                {
+                    value *v = new value;
+                    std::stringstream ss;
+                    std::string str(iter->second.first, iter->second.second);
+                    ss << std::string(str);
+                    ss >> v->v;
+                    v->real = str.back() != 'i';
+                    target_ptr = v;
                 }
+                break;
 
-                if(p.post(t, target_ptr)){ break; }
+            case parser::token_symbol:
+                {
+                    symbol *s = new symbol;
+                    s->s = std::string(iter->second.first, iter->second.second);
+                    target_ptr = s;
+                }
+                break;
+
+            default:
+                target_ptr = nullptr;
             }
+            if(p.post(t, target_ptr)){ break; }
+        }
+        if(p.error()){
+            return 0;
+        }else{
             p.post(parser::token_0, target_ptr);
-        }catch(std::runtime_error &e){
-            std::cout << "parsing error: " << e.what();
         }
 
-        eval_target *root = nullptr;
-        if(!p.accept(root)){
+        eval_target *root_ = nullptr;
+        if(!p.accept(root_)){
             std::cout << "parsing error.";
             return 0;
         }
+        std::unique_ptr<eval_target> root(root_);
         semantic_data sd;
         root->eval(sd);
         poly::node *q = sd.pop_stack().node;

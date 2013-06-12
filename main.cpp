@@ -180,11 +180,11 @@ namespace analyzer{
             }
             poly::node *l = el.node, *r = er.node;
             if(op_s == "+"){
-                poly::add(r, l);
-                sd.push_stack(r);
+                poly::add(l, r);
+                sd.push_stack(l);
             }else if(op_s == "-"){
-                poly::sub(r, l);
-                sd.push_stack(r);
+                poly::sub(l, r);
+                sd.push_stack(l);
             }else if(op_s == "*"){
                 sd.push_stack(poly::multiply(r, l));
                 poly::dispose(l);
@@ -500,8 +500,14 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
-int main(int argc, char *argv[]){
+int main(/*int argc, char *argv[]*/){
     try{
+        int argc = 2;
+        char *argv[] = {
+            "dummy",
+            "x^2 + y^2"
+        };
+
         if(argc != 2){ return 0; }
         statement_str target_str;
         lex_data::token_sequence token_sequence;

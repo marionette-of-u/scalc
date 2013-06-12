@@ -256,7 +256,7 @@ void add(node *p, node *q){
                         break;
                     }
                 }else{
-                    compare_result = -primitive_lexicographic_compare(l_iter->first, r_iter->first);
+                    compare_result = primitive_lexicographic_compare(l_iter->first, r_iter->first);
                     if(compare_result < 0){
                         ep = nullptr;
                         eq = r_iter->second;
@@ -344,7 +344,7 @@ node *multiply(const node *x, const node *y){
                             eq = nullptr;
                         }
                     }else{
-                        compare_result = -primitive_lexicographic_compare(l_iter->first, r_iter->first);
+                        compare_result = primitive_lexicographic_compare(l_iter->first, r_iter->first);
                         if(compare_result < 0){
                             ep = nullptr;
                             eq = r_iter->second;

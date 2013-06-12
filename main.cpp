@@ -500,14 +500,8 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
-int main(/*int argc, char *argv[]*/){
+int main(int argc, char *argv[]){
     try{
-        int argc = 2;
-        char *argv[] = {
-            "dummy",
-            "x^2 + y^2"
-        };
-
         if(argc != 2){ return 0; }
         statement_str target_str;
         lex_data::token_sequence token_sequence;

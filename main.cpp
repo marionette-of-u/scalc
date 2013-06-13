@@ -656,7 +656,7 @@ int main(
         int argc = 2;
         char *argv[] = {
             "dummy",
-            "-1i^-1i"
+            "100 / x"
         };
 #endif
 

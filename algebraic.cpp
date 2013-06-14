@@ -32,6 +32,38 @@ std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x){
 
 algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
 
+void algebraic::add(algebraic *p, algebraic *q){
+    algebraic *ep = nullptr, *eq = nullptr;
+    algebraic *p1, *q1;
+    p1 = p, p = p->next;
+    q1 = q, q = q->next;
+    dispose_node(q1);
+    while(q){
+        int exponent_compare_result;
+        while(p){
+            ep = p->e;
+            eq = q->e;
+            exponent_compare_result = compare(ep, eq);
+            if(exponent_compare_result <= 0){ break; }
+            p1 = p, p = p->next;
+        }
+        if(!p || exponent_compare_result < 0){
+            p1->next = q, p1 = q, q = q->next;
+            p1->next= p;
+        }else{
+            p->value += q->value;
+            if(p->value != 0){
+                p1 = p; p = p->next;
+            }else{
+                p = p->next;
+                dispose_node(p1->next);
+                p1->next = p;
+            }
+            q1 = q, q = q->next, dispose_node(q1);
+        }
+    }
+}
+
 void algebraic::change_sign(algebraic *p){
     while(p = p->next){
         p->value = -p->value;
@@ -55,6 +87,8 @@ algebraic *algebraic::constant(const rational &n){
     if(n != 0){
         algebraic *q = new_node();
         q->value = n;
+        q->c = new_node();
+        q->e = new_node();
         p->next = q;
     }
     return p;
@@ -132,12 +166,14 @@ void algebraic::dispose_node(algebraic *p){
 }
 
 void algebraic::dispose(algebraic *p){
+    if(!p){ return; }
     algebraic *q = p;
     while(q->next){
         dispose(q->e);
         dispose(q->c);
-        q = q->next;
+        p = q->next;
         dispose_node(q);
+        q = p;
     }
 }
 

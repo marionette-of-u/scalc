@@ -10,7 +10,7 @@ public:
 
     // 加算
     // qは破棄する
-    //static void add(algebraic *p, algebraic *q);
+    static void add(algebraic *p, algebraic *q);
 
     // 符号反転
     static void change_sign(algebraic *p);

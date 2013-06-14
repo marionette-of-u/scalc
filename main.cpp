@@ -648,19 +648,19 @@ namespace lex_data{
 
 #include "algebraic.hpp"
 
-namespace algebraic_impl{
-    std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x);
-}
-
 int main(
 #ifndef _DEBUG
     int argc, char *argv[]
 #endif
 ){
-    auto r = algebraic_impl::factorize(static_cast<std::uint64_t>(128) * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 5 * 7 * 13);
-    for(auto iter = r.begin(); iter != r.end(); ++iter){
-        std::cout << iter->first << "^" << iter->second << std::endl;
-    }
+    using namespace algebraic_impl;
+    algebraic *p = algebraic::constant(2), *q = algebraic::constant(3);
+    algebraic::dispose(p->next->e), algebraic::dispose(q->next->e);
+    p->next->e = algebraic::constant(rational(1, 2));
+    q->next->e = algebraic::constant(rational(1, 3));
+    algebraic::add(p, algebraic::constant(7));
+    algebraic::add(p, q);
+    algebraic::dispose(p);
     return 0;
 
     /*

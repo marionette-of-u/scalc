@@ -25,9 +25,6 @@ void node::complex_conjugate(){
     imag = -imag;
 }
 
-template<class T>
-inline int primitive_compare(const T &lhs, const T &rhs){ return lhs < rhs ? -1 : lhs > rhs ? 1 : 0; }
-
 inline int primitive_lexicographic_compare(const str_wrapper &lhs, const str_wrapper &rhs){
     return str_wrapper_less()(lhs, rhs);
 }

@@ -125,6 +125,11 @@ private:
     }
 };
 
+template<class T>
+inline int primitive_compare(const T &lhs, const T &rhs){
+    return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
+}
+
 namespace poly{
     template<class T>
     class type_idx_manager{

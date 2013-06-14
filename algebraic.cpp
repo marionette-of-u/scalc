@@ -1,11 +1,11 @@
-﻿#include <map>
+﻿#include "common.hpp"
 #include "algebraic.hpp"
 
 namespace algebraic_impl{
 
 // 素因数分解 
-std::map<int, std::size_t> factorize(int x){
-    std::map<int, std::size_t> r;
+std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x){
+    std::map<std::uint64_t, std::size_t> r;
     std::size_t t = 0;
     while(x >= 4 && (x & 1) == 0){
         ++t;
@@ -13,7 +13,7 @@ std::map<int, std::size_t> factorize(int x){
     }
     r[2] = t;
     t = 0;
-    int d = 3, q = x / d;
+    std::uint64_t d = 3, q = x / d;
     while(q >= d){
         if(x % d == 0){
             ++t;
@@ -30,100 +30,119 @@ std::map<int, std::size_t> factorize(int x){
     return r;
 }
 
-term::term() : value(), e(nullptr), next(nullptr){}
-term::term(int n) : value(n), e(nullptr), next(nullptr){}
-term::term(const rational &n) : value(n), e(nullptr), next(nullptr){}
+algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
 
-void term::add(term *p, term *q){
-    term *p1, *q1;
-    p1 = p, p = p->next;
-    q1 = q, q = q->next;
-    dispose_node(q1);
-    while(q){
-        int compare_result;
-        while(p){
-            compare_result = sequential_compare(p->e, q->e);
-            if(compare_result <= 0){ break; }
-            p1 = p, p = p->next;
-        }
-        if(!p || compare_result < 0){
-            p1->next = q, p1 = q, q = q->next;
-            p1->next = p;
-        }else{
-            p->value += q->value;
-            if(p->value != 0){
-                p1 = p, p = p->next;
-            }else{
-                p = p->next;
-                dispose_node(p1->next);
-                p1->next = p;
-            }
-            q1 = q, q = q->next, dispose_node(q1);
-        }
-    }
-}
-
-void term::change_sign(term *p){
+void algebraic::change_sign(algebraic *p){
     while(p = p->next){
         p->value = -p->value;
     }
 }
 
-term *term::copy(const term *p){
-    term *q, *r;
-    q = r = new term;
+algebraic *algebraic::copy(const algebraic *p){
+    algebraic *q, *r;
+    q = r = new_node();
     while(p = p->next){
-        r = r->next = new term(p->value);
-        r->e = new term(*p->e);
+        r = r->next = new_node();
+        r->value = p->value;
+        r->e = copy(p->e);
+        r->c = copy(p->c);
     }
     return q;
 }
 
-term *term::constant(rational n){
-    term *p = new term, *q;
+algebraic *algebraic::constant(const rational &n){
+    algebraic *p = new_node();
     if(n != 0){
-        q = new term(n);
+        algebraic *q = new_node();
+        q->value = n;
         p->next = q;
-        p->next->e = new term;
     }
     return p;
 }
 
-int term::sequential_compare(const term *lhs, const term *rhs){
-    const term *p = lhs, *q = rhs;
-    if(!p && !q){ return 0; }
-    p = p->next, q = q->next;
-    while(p && q){
-        p = p->next, q = q->next;
-        if(p->value < q->value){
-            return -1;
-        }else if(p->value > q->value){
-            return +1;
+int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
+    // note: priority of class
+    // Q > Coefficient * Q > Q^Exponent > Coefficient * Q^Exponent
+    auto factor_class = [](const algebraic *f) -> int{
+        if(is_exist(f->e)){
+            if(is_exist(f->c)){
+                return 3;
+            }
+            return 2;
+        }else{
+            if(is_exist(f->c)){
+                return 1;
+            }
+            return 0;
         }
-        int exponent_result = sequential_compare(p->e, q->e);
-        if(exponent_result != 0){
-            return exponent_result;
-        }
+    };
+    if(!lhs && !rhs){ return 0; }
+    if(!lhs && rhs){ return -1; }
+    if(lhs && !rhs){ return +1; }
+    algebraic *lhs_e = lhs->e, *rhs_e = rhs->e;
+    algebraic *lhs_c = lhs->c, *rhs_c = rhs->c;
+    lhs = lhs->next, rhs = rhs->next;
+    if(!lhs && !rhs){ return 0; }
+    if(!lhs && rhs){ return -1; }
+    if(lhs && !rhs){ return +1; }
+    int lhs_class = factor_class(lhs), rhs_class = factor_class(rhs);
+    if(lhs_class < rhs_class){
+        return -1;
+    }else if(lhs_class > rhs_class){
+        return +1;
     }
-    if(!p && q){ return -1; }
-    if(p && !q){ return +1; }
-    return 0;
+    int result;
+    switch(lhs_class){
+    case 3:
+        result = compare(lhs_e, rhs_e);
+        if(result == 0){ result = compare(lhs_c, rhs_c); }
+        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = compare(lhs, rhs); }
+        break;
+
+    case 2:
+        result = compare(lhs_e, rhs_e);
+        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = compare(lhs, rhs); }
+        break;
+
+    case 1:
+        result = compare(lhs_c, rhs_c);
+        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = compare(lhs, rhs); }
+        break;
+
+    case 0:
+        result = primitive_compare(lhs->value, rhs->value);
+        if(result == 0){ result = compare(lhs, rhs); }
+        break;
+
+    default:
+        result = 0;
+    }
+    return result;
 }
 
-void term::dispose_node(term *p){
-    if(p->e){ dispose(p->e); }
+algebraic *algebraic::new_node(){
+    return new algebraic;
+}
+
+void algebraic::dispose_node(algebraic *p){
     delete p;
 }
 
-void term::dispose(term *p){
-    if(!p){ return; }
-    term *q = p;
+void algebraic::dispose(algebraic *p){
+    algebraic *q = p;
     while(q->next){
-        p = q;
+        dispose(q->e);
+        dispose(q->c);
         q = q->next;
-        dispose(p->e);
-        delete p;
+        dispose_node(q);
     }
+}
+
+bool algebraic::is_exist(const algebraic *p){
+    return p && p->next;
 }
 
 } // namespace algebraic_impl

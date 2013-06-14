@@ -649,7 +649,7 @@ namespace lex_data{
 #include "algebraic.hpp"
 
 namespace algebraic_impl{
-    std::map<int, std::size_t> factorize(int x);
+    std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x);
 }
 
 int main(
@@ -657,7 +657,7 @@ int main(
     int argc, char *argv[]
 #endif
 ){
-    auto r = algebraic_impl::factorize(1024 * 3 * 5 * 7 * 13);
+    auto r = algebraic_impl::factorize(static_cast<std::uint64_t>(128) * 3 * 3 * 3 * 3 * 3 * 3 * 3 * 5 * 7 * 13);
     for(auto iter = r.begin(); iter != r.end(); ++iter){
         std::cout << iter->first << "^" << iter->second << std::endl;
     }

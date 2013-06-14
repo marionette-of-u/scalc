@@ -9,7 +9,6 @@
 #include <typeinfo>
 #include <iostream>
 #include <stdexcept>
-#include "algebraic.hpp"
 
 typedef double fpoint;
 

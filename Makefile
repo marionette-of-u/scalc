@@ -1,5 +1,5 @@
 TARGET      = scalc
-SOURCEFILES = main.cpp poly.cpp
+SOURCEFILES = main.cpp poly.cpp algebraic.cpp
 CC          = g++
 CFLAGS      = -std=c++11 -c
 RFLAGS      = -O3

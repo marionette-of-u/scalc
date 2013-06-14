@@ -646,11 +646,24 @@ namespace lex_data{
     typedef std::vector<lex_result> token_sequence;
 }
 
+#include "algebraic.hpp"
+
+namespace algebraic_impl{
+    std::map<int, std::size_t> factorize(int x);
+}
+
 int main(
 #ifndef _DEBUG
     int argc, char *argv[]
 #endif
 ){
+    auto r = algebraic_impl::factorize(1024 * 3 * 5 * 7 * 13);
+    for(auto iter = r.begin(); iter != r.end(); ++iter){
+        std::cout << iter->first << "^" << iter->second << std::endl;
+    }
+    return 0;
+
+    /*
     try{
 #ifdef _DEBUG
         int argc = 2;
@@ -735,6 +748,7 @@ int main(
     }catch(std::runtime_error &e){
         std::cout << e.what() << std::endl;
     }
+    */
 
     return 0;
 }

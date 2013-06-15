@@ -185,25 +185,6 @@ namespace analyzer{
                 throw(error("stack element is value, in binary operator."));
             }
             poly::node *l = el.node, *r = er.node;
-            //if(op_s == "+"){
-            //    poly::add(l, r);
-            //    sd.push_stack(l);
-            //}else if(op_s == "-"){
-            //    poly::sub(l, r);
-            //    sd.push_stack(l);
-            //}else if(op_s == "*"){
-            //    sd.push_stack(poly::multiply(r, l));
-            //    poly::dispose(l);
-            //    poly::dispose(r);
-            //}else if(op_s == "/" || op_s == "//"){
-            //    sd.push_stack(poly::divide(l, r, nullptr));
-            //    poly::dispose(l);
-            //    poly::dispose(r);
-            //}else if(op_s == "^"){
-            //    sd.push_stack(poly::power(l, r));
-            //    poly::dispose(l);
-            //    poly::dispose(r);
-            //}
         }
 
         std::unique_ptr<eval_target> lhs, rhs;
@@ -673,7 +654,7 @@ int main(
         int argc = 2;
         char *argv[] = {
             "",
-            "(4 * a * b^(-3i * -a))^-3i"
+            "(4 * a)^(-3i)"
         };
 #else
         if(argc != 2){ return 0; }

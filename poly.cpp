@@ -87,36 +87,36 @@ int lexicographic_compare(const node *l, const node *r){
     switch(l_class){
     case 5:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(l->real, r->real); }
-        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
+        if(result == 0){ result = primitive_compare(abs(l->real), abs(r->real)); }
+        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 4:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
+        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 3:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(l->real, r->real); }
+        if(result == 0){ result = primitive_compare(abs(l->real), abs(r->real)); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 2:
-        result = primitive_compare(l->real, r->real);
-        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
+        result = primitive_compare(abs(l->real), abs(r->real));
+        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 1:
-        result = primitive_compare(l->imag, r->imag);
+        result = primitive_compare(abs(l->imag), abs(r->imag));
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 0:
-        result = primitive_compare(l->real, r->real);
+        result = primitive_compare(abs(l->real), abs(r->real));
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
@@ -480,8 +480,41 @@ node *power(node *x, node *y){
         return 2;
     };
 
-    std::function<node*(node*, node*)> common_a = [](node *p, node *q) -> node*{
+    std::function<node*(node*, node*)> common_b = [](node *p, node *q) -> node*{
+        auto c_mul = [](fpoint x_re, fpoint x_im, fpoint y_re, fpoint y_im) -> std::pair<fpoint, fpoint>{
+            std::pair<fpoint, fpoint> z;
+            z.first = x_re * y_re - x_im * y_im;
+            z.second = x_re * y_im + x_im * y_re;
+            return z;
+        };
+
+        auto c_exp = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
+            fpoint a = std::exp(x_re);
+            x_re = a * std::cos(x_im);
+            x_im = a * std::sin(x_im);
+            return std::make_pair(x_re, x_im);
+        };
+
+        auto c_log = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
+            std::pair<fpoint, fpoint> z;
+            z.first = 0.5 * std::log(x_re * x_re + x_im * x_im);
+            z.second = std::atan2(x_im, x_re);
+            return z;
+        };
+
+        p = p->next, q = q->next;
+        auto log_result = c_log(p->real, p->imag);
+        auto mul_result = c_mul(q->real, q->imag, log_result.first, log_result.second);
+        auto exp_result = c_exp(mul_result.first, mul_result.second);
+
+        return constant(exp_result.first, exp_result.second);
+    };
+
+    std::function<node*(node*, node*)> common_a = [common_b](node *p, node *q) -> node*{
         node *r = constant(1), *s = r;
+        node *t = common_b(p, q);
+        s->next->real = t->next->real, s->next->imag = t->next->imag;
+        dispose(t);
         p = p->next;
         r = r->next;
         for(auto iter = p->e.begin(); iter != p->e.end(); ++iter){
@@ -505,35 +538,7 @@ node *power(node *x, node *y){
                 return nullptr;
             },
 
-            [](node *p, node *q) -> node*{
-                auto c_mul = [](fpoint x_re, fpoint x_im, fpoint y_re, fpoint y_im) -> std::pair<fpoint, fpoint>{
-                    std::pair<fpoint, fpoint> z;
-                    z.first = x_re * y_re - x_im * y_im;
-                    z.second = x_re * y_im + x_im * y_re;
-                    return z;
-                };
-
-                auto c_exp = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
-                    fpoint a = std::exp(x_re);
-                    x_re = a * std::cos(x_im);
-                    x_im = a * std::sin(x_im);
-                    return std::make_pair(x_re, x_im);
-                };
-
-                auto c_log = [](fpoint x_re, fpoint x_im) -> std::pair<fpoint, fpoint>{
-                    std::pair<fpoint, fpoint> z;
-                    z.first = 0.5 * std::log(x_re * x_re + x_im * x_im);
-                    z.second = std::atan2(x_im, x_re);
-                    return z;
-                };
-
-                p = p->next, q = q->next;
-                auto log_result = c_log(p->real, p->imag);
-                auto mul_result = c_mul(q->real, q->imag, log_result.first, log_result.second);
-                auto exp_result = c_exp(mul_result.first, mul_result.second);
-
-                return constant(exp_result.first, exp_result.second);
-            },
+            common_b,
 
             [](node *p, node *q) -> node*{
                 throw(error("reject, constant^polynomial."));

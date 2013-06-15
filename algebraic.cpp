@@ -32,6 +32,15 @@ std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x){
 
 algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
 
+algebraic *algebraic::multiply(const algebraic *p, const algebraic *q){
+    return nullptr;
+}
+
+void algebraic::sub(algebraic *p, algebraic *q){
+    change_sign(q);
+    add(p, q);
+}
+
 void algebraic::add(algebraic *p, algebraic *q){
     algebraic *ep = nullptr, *eq = nullptr;
     algebraic *p1, *q1;
@@ -131,24 +140,20 @@ int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
         result = compare(lhs_e, rhs_e);
         if(result == 0){ result = compare(lhs_c, rhs_c); }
         if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
-        if(result == 0){ result = compare(lhs, rhs); }
         break;
 
     case 2:
         result = compare(lhs_e, rhs_e);
         if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
-        if(result == 0){ result = compare(lhs, rhs); }
         break;
 
     case 1:
         result = compare(lhs_c, rhs_c);
         if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
-        if(result == 0){ result = compare(lhs, rhs); }
         break;
 
     case 0:
         result = primitive_compare(lhs->value, rhs->value);
-        if(result == 0){ result = compare(lhs, rhs); }
         break;
 
     default:

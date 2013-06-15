@@ -8,6 +8,14 @@ class algebraic{
 public:
     algebraic();
 
+    // 乗算
+    // 新たな多項式を返す
+    static algebraic *multiply(const algebraic *p, const algebraic *q);
+
+    // 減算
+    // qは破棄する
+    static void sub(algebraic *p, algebraic *q);
+
     // 加算
     // qは破棄する
     static void add(algebraic *p, algebraic *q);
@@ -39,16 +47,16 @@ public:
     // 値
     rational value;
 
-    // 指数部
-    // 第2級連結
+    // exponent.
+    // ii-class linked list.
     algebraic *e;
 
-    // 係数部
-    // 第2級連結
+    // coefficient.
+    // iii-class linked list.
     algebraic *c;
 
-    // 次の項
-    // 第1級連結
+    // next term.
+    // i-class linked list.
     algebraic *next;
 
 private:

@@ -641,7 +641,6 @@ std::pair<std::string, bool> poly_to_string_impl(const node *p, bool ext_paren =
             }else{
                 bool sign_re = re > 0, sign_im = im > 0;
                 std::string s;
-                if(!sign_re && !sign_im || sign_re != sign_im){ s += "-"; }else if(sign_re && sign_im){ s += "+"; }
                 if(!p->e.empty()){
                     s += "(";
                     if(!sign_re && !sign_im){

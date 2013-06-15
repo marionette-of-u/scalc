@@ -654,25 +654,22 @@ int main(
 #endif
 ){
     using namespace algebraic_impl;
-    algebraic *p = algebraic::constant(2), *q = algebraic::constant(3);
+    algebraic *p = algebraic::constant(-2), *q = algebraic::constant(-3);
     algebraic::dispose(p->next->e), algebraic::dispose(q->next->e);
     p->next->e = algebraic::constant(rational(1, 2));
     q->next->e = algebraic::constant(rational(1, 3));
     algebraic::add(p, algebraic::constant(7));
+    algebraic::add(p, algebraic::copy(q));
+    std::cout << *p << std::endl;
     algebraic::add(p, q);
+    std::cout << *p << std::endl;
+    algebraic::add(p, algebraic::constant(-7));
+    std::cout << *p << std::endl;
     algebraic::dispose(p);
     return 0;
 
-    /*
+#ifndef _DEBUG
     try{
-#ifdef _DEBUG
-        int argc = 2;
-        char *argv[] = {
-            "dummy",
-            "100 / x"
-        };
-#endif
-
         if(argc != 2){ return 0; }
         statement_str target_str;
         lex_data::token_sequence token_sequence;
@@ -748,7 +745,7 @@ int main(
     }catch(std::runtime_error &e){
         std::cout << e.what() << std::endl;
     }
-    */
 
     return 0;
+#endif
 }

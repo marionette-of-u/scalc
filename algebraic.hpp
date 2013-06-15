@@ -55,4 +55,6 @@ private:
     inline algebraic(const algebraic&){}
 };
 
+std::ostream& operator<< (std::ostream& os, const algebraic &a);
+
 } // algebraic_impl

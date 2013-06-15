@@ -181,4 +181,26 @@ bool algebraic::is_exist(const algebraic *p){
     return p && p->next;
 }
 
+std::ostream& operator<< (std::ostream& os, const algebraic &a){
+    const algebraic *p = &a;
+    while(p = p->next){
+        if(p != a.next){ os << "+"; }
+        if(algebraic::is_exist(p->e)){
+            os << "(";
+        }
+        os << p->value;
+        if(algebraic::is_exist(p->c)){
+            os << "*(";
+            os << *(p->c);
+            os << ")";
+        }
+        if(algebraic::is_exist(p->e)){
+            os << ")^(";
+            os << *(p->e);
+            os << ")";
+        }
+    }
+    return os;
+}
+
 } // namespace algebraic_impl

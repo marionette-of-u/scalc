@@ -8,10 +8,6 @@ class algebraic{
 public:
     algebraic();
 
-    // 乗算
-    // 新たな多項式を返す
-    static algebraic *multiply(const algebraic *p, const algebraic *q);
-
     // 減算
     // qは破棄する
     static void sub(algebraic *p, algebraic *q);
@@ -29,8 +25,8 @@ public:
     // 定数を生成
     static algebraic *constant(const rational &n);
 
-    // 比較
-    static int compare(const algebraic *lhs, const algebraic *rhs);
+    // 式を比較
+    static int compare(const algebraic *lhs, const algebraic *rhs, bool mono = false);
 
     // 新たな要素を生成する
     static algebraic *new_node();
@@ -47,16 +43,23 @@ public:
     // 値
     rational value;
 
-    // exponent.
+    // value^(e) * c->value^(c->e) * c->c->value^(c->c->e) * c->c->c->value^(c->c->c->e)
+    // +
+    // next (recursive structure...)
+    // +
+    // :
+    // :
+
     // ii-class linked list.
+    // this->value^(other_algebraic)
     algebraic *e;
 
-    // coefficient.
     // iii-class linked list.
+    // 
     algebraic *c;
 
-    // next term.
     // i-class linked list.
+    // this->value + this->next->value + this->next->next->value + ...
     algebraic *next;
 
 private:

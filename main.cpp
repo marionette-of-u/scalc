@@ -635,17 +635,17 @@ int main(
 #endif
 ){
     //using namespace algebraic_impl;
-    //algebraic *p = algebraic::constant(-2), *q = algebraic::constant(-3);
-    //algebraic::dispose(p->next->e), algebraic::dispose(q->next->e);
-    //p->next->e = algebraic::constant(rational(1, 2));
-    //q->next->e = algebraic::constant(rational(1, 3));
-    //algebraic::add(p, algebraic::constant(7));
-    //algebraic::add(p, algebraic::copy(q));
-    //std::cout << *p << std::endl;
+    //algebraic *p = algebraic::constant(2), *q = algebraic::constant(3);
+    //p->next->c = algebraic::new_node();
+    //p->next->c->value = rational(2, 5);
+    //p->next->c->e = algebraic::constant(rational(1, 11));
+
+    //q->next->c = algebraic::new_node();
+    //q->next->c->value = rational(2, 7);
+    //q->next->c->e = algebraic::constant(rational(1, 11));
+
     //algebraic::add(p, q);
-    //std::cout << *p << std::endl;
-    //algebraic::add(p, algebraic::constant(-7));
-    //std::cout << *p << std::endl;
+
     //algebraic::dispose(p);
     //return 0;
 

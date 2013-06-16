@@ -4,37 +4,33 @@
 namespace algebraic_impl{
 
 // 素因数分解 
-std::map<std::uint64_t, std::size_t> factorize(std::uint64_t x){
-    std::map<std::uint64_t, std::size_t> r;
+std::map<std::int64_t, std::size_t> factorize(std::int64_t x, std::size_t coefficient){
+    std::map<std::int64_t, std::size_t> r;
     std::size_t t = 0;
     while(x >= 4 && (x & 1) == 0){
         ++t;
         x >>= 1;
     }
-    r[2] = t;
+    r[2] += t * coefficient;
     t = 0;
-    std::uint64_t d = 3, q = x / d;
+    std::int64_t d = 3, q = x / d;
     while(q >= d){
         if(x % d == 0){
             ++t;
             x = q;
         }else{
-            r[d] = t;
+            r[d] += t * coefficient;
             d += 2;
             t = 0;
         }
         q = x / d;
     }
-    r[d] = t;
-    ++r[x];
+    r[d] += t * coefficient;
+    if(x > 0){ r[x] += coefficient; }
     return r;
 }
 
 algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
-
-algebraic *algebraic::multiply(const algebraic *p, const algebraic *q){
-    return nullptr;
-}
 
 void algebraic::sub(algebraic *p, algebraic *q){
     change_sign(q);
@@ -42,7 +38,6 @@ void algebraic::sub(algebraic *p, algebraic *q){
 }
 
 void algebraic::add(algebraic *p, algebraic *q){
-    algebraic *ep = nullptr, *eq = nullptr;
     algebraic *p1, *q1;
     p1 = p, p = p->next;
     q1 = q, q = q->next;
@@ -50,19 +45,18 @@ void algebraic::add(algebraic *p, algebraic *q){
     while(q){
         int exponent_compare_result;
         while(p){
-            ep = p->e;
-            eq = q->e;
-            exponent_compare_result = compare(ep, eq);
+            exponent_compare_result = compare(p->e, q->e);
+            if(exponent_compare_result == 0){ exponent_compare_result = compare(p->c, q->c, true); }
             if(exponent_compare_result <= 0){ break; }
             p1 = p, p = p->next;
         }
         if(!p || exponent_compare_result < 0){
             p1->next = q, p1 = q, q = q->next;
-            p1->next= p;
+            p1->next = p;
         }else{
             p->value += q->value;
             if(p->value != 0){
-                p1 = p; p = p->next;
+                p1 = p, p = p->next;
             }else{
                 p = p->next;
                 dispose_node(p1->next);
@@ -80,6 +74,7 @@ void algebraic::change_sign(algebraic *p){
 }
 
 algebraic *algebraic::copy(const algebraic *p){
+    if(!p){ return nullptr; }
     algebraic *q, *r;
     q = r = new_node();
     while(p = p->next){
@@ -96,16 +91,12 @@ algebraic *algebraic::constant(const rational &n){
     if(n != 0){
         algebraic *q = new_node();
         q->value = n;
-        q->c = new_node();
-        q->e = new_node();
         p->next = q;
     }
     return p;
 }
 
-int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
-    // note: priority of class
-    // Q > Coefficient * Q > Q^Exponent > Coefficient * Q^Exponent
+int algebraic::compare(const algebraic *lhs, const algebraic *rhs, bool mono){
     auto factor_class = [](const algebraic *f) -> int{
         if(is_exist(f->e)){
             if(is_exist(f->c)){
@@ -122,12 +113,14 @@ int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
     if(!lhs && !rhs){ return 0; }
     if(!lhs && rhs){ return -1; }
     if(lhs && !rhs){ return +1; }
+    if(!mono){
+        lhs = lhs->next, rhs = rhs->next;
+        if(!lhs && !rhs){ return 0; }
+        if(!lhs && rhs){ return -1; }
+        if(lhs && !rhs){ return +1; }
+    }
     algebraic *lhs_e = lhs->e, *rhs_e = rhs->e;
     algebraic *lhs_c = lhs->c, *rhs_c = rhs->c;
-    lhs = lhs->next, rhs = rhs->next;
-    if(!lhs && !rhs){ return 0; }
-    if(!lhs && rhs){ return -1; }
-    if(lhs && !rhs){ return +1; }
     int lhs_class = factor_class(lhs), rhs_class = factor_class(rhs);
     if(lhs_class < rhs_class){
         return -1;
@@ -139,21 +132,21 @@ int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
     case 3:
         result = compare(lhs_e, rhs_e);
         if(result == 0){ result = compare(lhs_c, rhs_c); }
-        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
         break;
 
     case 2:
         result = compare(lhs_e, rhs_e);
-        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
         break;
 
     case 1:
         result = compare(lhs_c, rhs_c);
-        if(result == 0){ result = primitive_compare(lhs->value, rhs->value); }
+        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
         break;
 
     case 0:
-        result = primitive_compare(lhs->value, rhs->value);
+        result = primitive_compare(abs(lhs->value), abs(rhs->value));
         break;
 
     default:
@@ -183,25 +176,22 @@ void algebraic::dispose(algebraic *p){
 }
 
 bool algebraic::is_exist(const algebraic *p){
-    return p && p->next;
+    return p != nullptr;
 }
 
 std::ostream& operator<< (std::ostream& os, const algebraic &a){
     const algebraic *p = &a;
     while(p = p->next){
         if(p != a.next){ os << "+"; }
-        if(algebraic::is_exist(p->e)){
-            os << "(";
-        }
         os << p->value;
-        if(algebraic::is_exist(p->c)){
+        if(p->c){
             os << "*(";
             os << *(p->c);
             os << ")";
         }
-        if(algebraic::is_exist(p->e)){
-            os << ")^(";
-            os << *(p->e);
+        if(p->c && p->c->e){
+            os << "^(";
+            os << *(p->c->e);
             os << ")";
         }
     }

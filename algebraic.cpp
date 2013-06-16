@@ -32,6 +32,8 @@ std::map<std::int64_t, std::size_t> factorize(std::int64_t x, std::size_t coeffi
 
 algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
 
+algebraic *multiply(const algebraic *x, const algebraic *y);
+
 void algebraic::sub(algebraic *p, algebraic *q){
     change_sign(q);
     add(p, q);
@@ -45,8 +47,8 @@ void algebraic::add(algebraic *p, algebraic *q){
     while(q){
         int exponent_compare_result;
         while(p){
-            exponent_compare_result = compare(p->e, q->e);
-            if(exponent_compare_result == 0){ exponent_compare_result = compare(p->c, q->c, true); }
+            exponent_compare_result = compare(p->c, q->c, true);
+            if(exponent_compare_result == 0){ exponent_compare_result = compare(p->e, q->e); }
             if(exponent_compare_result <= 0){ break; }
             p1 = p, p = p->next;
         }

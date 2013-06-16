@@ -8,6 +8,10 @@ class algebraic{
 public:
     algebraic();
 
+    // 乗算
+    // 新たな多項式を返す
+    static algebraic *multiply(const algebraic *x, const algebraic *y);
+
     // 減算
     // qは破棄する
     static void sub(algebraic *p, algebraic *q);
@@ -43,7 +47,7 @@ public:
     // 値
     rational value;
 
-    // value^(e) * c->value^(c->e) * c->c->value^(c->c->e) * c->c->c->value^(c->c->c->e)
+    // value^(e) * c->value^(c->e) * c->c->value^(c->c->e) * c->c->c->value^(c->c->c->e) * ...
     // +
     // next (recursive structure...)
     // +

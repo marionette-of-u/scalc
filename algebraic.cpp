@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <utility>
 #include <functional>
+#include <cmath>
 #include "common.hpp"
 #include "algebraic.hpp"
 
@@ -54,28 +55,7 @@ auto nd_pow = [](std::int64_t n, std::int64_t d, const std::vector<std::pair<std
     for(auto iter = factorized_n.begin(); iter != factorized_n.end(); ++iter){
         std::int64_t r = iter->second * n / d, s = (iter->second * n) % d;
         v += r;
-        std::int64_t x = iter->first, n = s, p = 1, q;
-        if(n == 1){ p = x; }else{
-            p = x * x;
-            if(n > 0){
-                q = p;
-                if((n & 1) == 1){ p = q * x; }else{ p = q; }
-                x = q; n /= 2;
-                if((n & 1) == 1){
-                    q = p * x;
-                    p = q;
-                }
-                while((n /= 2) > 0){
-                    q = x * x;
-                    x = q;
-                    if((n & 1) == 1){
-                        q = p * x;
-                        p = q;
-                    }
-                }
-            }
-        }
-        w *= p;
+        w *= std::pow(iter->first, s);
     }
     return std::make_pair(v, w);
 };

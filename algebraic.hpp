@@ -1,5 +1,4 @@
-﻿#include <map>
-#include <cstdint>
+﻿#include <cstdint>
 #include "rational.hpp"
 
 namespace algebraic_impl{
@@ -7,6 +6,9 @@ namespace algebraic_impl{
 class algebraic{
 public:
     algebraic();
+
+    // テスト
+    static void test();
 
     // 乗算
     // 新たな多項式を返す
@@ -22,6 +24,9 @@ public:
 
     // 符号反転
     static void change_sign(algebraic *p);
+
+    // 単体コピー
+    static algebraic *copy_mono(const algebraic *p);
 
     // コピー
     static algebraic *copy(const algebraic *p);
@@ -54,17 +59,14 @@ public:
     // :
     // :
 
+    // i-class linked list.
+    algebraic *next;
+
     // ii-class linked list.
-    // this->value^(other_algebraic)
     algebraic *e;
 
     // iii-class linked list.
-    // 
     algebraic *c;
-
-    // i-class linked list.
-    // this->value + this->next->value + this->next->next->value + ...
-    algebraic *next;
 
 private:
     inline algebraic(const algebraic&){}

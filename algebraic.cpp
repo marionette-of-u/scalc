@@ -1,17 +1,24 @@
-﻿#include "common.hpp"
+﻿#include <vector>
+#include <algorithm>
+#include <utility>
+#include <functional>
+#include "common.hpp"
 #include "algebraic.hpp"
 
 namespace algebraic_impl{
 
 // 素因数分解 
-std::map<std::int64_t, std::size_t> factorize(std::int64_t x, std::size_t coefficient){
-    std::map<std::int64_t, std::size_t> r;
+std::vector<std::pair<std::int64_t, std::size_t>> factorize(std::int64_t x_prime){
+    std::int64_t x = x_prime;
+    std::vector<std::pair<std::int64_t, std::size_t>> r;
     std::size_t t = 0;
     while(x >= 4 && (x & 1) == 0){
         ++t;
         x >>= 1;
     }
-    r[2] += t * coefficient;
+    if(t > 0){
+        r.push_back(std::make_pair(2, 2 == x ? t + 1 : t));
+    }
     t = 0;
     std::int64_t d = 3, q = x / d;
     while(q >= d){
@@ -19,20 +26,127 @@ std::map<std::int64_t, std::size_t> factorize(std::int64_t x, std::size_t coeffi
             ++t;
             x = q;
         }else{
-            r[d] += t * coefficient;
+            if(t > 0){
+                r.push_back(std::make_pair(d, d == x_prime ? t + 1 : t));
+            }
             d += 2;
             t = 0;
         }
         q = x / d;
     }
-    r[d] += t * coefficient;
-    if(x > 0){ r[x] += coefficient; }
+    auto iter = std::find_if(
+        r.begin(),
+        r.end(),
+        [x](const std::pair<std::int64_t, std::size_t> &a){ return a.first == x; }
+    );
+    if(iter == r.end()){
+        r.push_back(std::make_pair(x, t + 1));
+    }else{
+        iter->second = t + 1;
+    }
     return r;
 }
 
-algebraic::algebraic() : value(0), e(nullptr), c(nullptr), next(nullptr){}
+algebraic::algebraic() : value(0), next(nullptr), e(nullptr), c(nullptr){}
 
-algebraic *multiply(const algebraic *x, const algebraic *y);
+auto nd_pow = [](std::int64_t n, std::int64_t d, const std::vector<std::pair<std::int64_t, std::size_t>> &factorized_n){
+    std::int64_t v = 0, w = 1;
+    for(auto iter = factorized_n.begin(); iter != factorized_n.end(); ++iter){
+        std::int64_t r = iter->second * n / d, s = (iter->second * n) % d;
+        v += r;
+        std::int64_t x = iter->first, n = s, p = 1, q;
+        if(n == 1){ p = x; }else{
+            p = x * x;
+            if(n > 0){
+                q = p;
+                if((n & 1) == 1){ p = q * x; }else{ p = q; }
+                x = q; n /= 2;
+                if((n & 1) == 1){
+                    q = p * x;
+                    p = q;
+                }
+                while((n /= 2) > 0){
+                    q = x * x;
+                    x = q;
+                    if((n & 1) == 1){
+                        q = p * x;
+                        p = q;
+                    }
+                }
+            }
+        }
+        w *= p;
+    }
+    return std::make_pair(v, w);
+};
+
+auto linked_multiply = [](algebraic *p, algebraic *q){
+    p = p->next, q = q->next;
+    algebraic *p1 = nullptr;
+    int compare_result = 0;
+    if(q){
+        for(; p; p1 = p, p = p->c){
+            compare_result = algebraic::compare(p->e, q->e);
+            if(compare_result <= 0){ break; }
+        }
+    }
+    if(!p || compare_result < 0){
+        (p ? p : p1)->c = algebraic::copy(q);
+    }else{
+        algebraic *r = algebraic::new_node();
+        std::int64_t n = p->e->value.numerator(), d = p->e->value.denominator();
+        r->e = algebraic::copy_mono(p->e);
+        r->value = p->value * q->value;
+        r->value.normalize();
+        {
+            auto factorized = factorize(r->value.numerator());
+            auto vw = nd_pow(n, d, factorized);
+            ;
+        }
+        {
+            auto factorized_d = factorize(r->value.denominator());
+            auto vw = nd_pow(n, d, factorized_d);
+            ;
+        }
+    }
+};
+
+void algebraic::test(){
+    algebraic *a = constant(rational(29, 36));
+    a->next->e = new_node();
+    a->next->e->value = rational(1, 2);
+
+    algebraic *b = constant(rational(5, 36));
+    b->next->e = new_node();
+    b->next->e->value = rational(1, 2);
+
+    linked_multiply(a, b);
+
+    return;
+}
+
+algebraic *algebraic::multiply(const algebraic *x, const algebraic *y){
+
+    //algebraic *p, *p1, *q, *r = new_node();
+    //const algebraic *z;
+    //r = new_node(), q = nullptr;
+    //while(y = y->next){
+    //    p1 = r, p = p1->next, z = x;
+    //    while(z = z->next){
+    //        if(!q){ q = new_node(); }
+    //        // ** TODO **
+    //        // q->value = y->value * z->value;
+    //        // q->e = y->e + z->e;
+    //        while(p){
+    //            for(; ; ){
+    //                ;
+    //            }
+    //        }
+    //    }
+    //}
+
+    return nullptr;
+}
 
 void algebraic::sub(algebraic *p, algebraic *q){
     change_sign(q);
@@ -75,15 +189,25 @@ void algebraic::change_sign(algebraic *p){
     }
 }
 
+algebraic *algebraic::copy_mono(const algebraic *p){
+    if(!p){ return nullptr; }
+    algebraic *q = new_node();
+    q->value = p->value;
+    q->e = copy_mono(p->e);
+    q->c = copy_mono(p->c);
+    return q;
+}
+
 algebraic *algebraic::copy(const algebraic *p){
     if(!p){ return nullptr; }
     algebraic *q, *r;
     q = r = new_node();
-    while(p = p->next){
+    while(p){
         r = r->next = new_node();
         r->value = p->value;
-        r->e = copy(p->e);
-        r->c = copy(p->c);
+        r->e = copy_mono(p->e);
+        r->c = copy_mono(p->c);
+        p = p->next;
     }
     return q;
 }

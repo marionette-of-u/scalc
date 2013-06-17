@@ -634,7 +634,8 @@ int main(
     int argc, char *argv[]
 #endif
 ){
-    //using namespace algebraic_impl;
+    using namespace algebraic_impl;
+    algebraic::test();
     //algebraic *p = algebraic::constant(2), *q = algebraic::constant(3);
     //p->next->c = algebraic::new_node();
     //p->next->c->value = rational(2, 5);
@@ -647,7 +648,7 @@ int main(
     //algebraic::add(p, q);
 
     //algebraic::dispose(p);
-    //return 0;
+    return 0;
 
     try{
 #ifdef _DEBUG

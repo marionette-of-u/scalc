@@ -7,19 +7,18 @@
 #include "algebraic.hpp"
 
 namespace algebraic_impl{
-
-// 素因数分解 
-std::vector<std::pair<std::int64_t, std::size_t>> factorize(std::int64_t x_prime){
+// x_prime^(num / den) = a in N
+// OR
+// x_prime
+std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t den){
     std::int64_t x = x_prime;
-    std::vector<std::pair<std::int64_t, std::size_t>> r;
+    std::vector<std::pair<std::int64_t, std::int64_t>> r;
     std::size_t t = 0;
     while(x >= 4 && (x & 1) == 0){
         ++t;
         x >>= 1;
     }
-    if(t > 0){
-        r.push_back(std::make_pair(2, 2 == x ? t + 1 : t));
-    }
+    if(t > 0){ r.push_back(std::make_pair(2, t)); }
     t = 0;
     std::int64_t d = 3, q = x / d;
     while(q >= d){
@@ -28,7 +27,9 @@ std::vector<std::pair<std::int64_t, std::size_t>> factorize(std::int64_t x_prime
             x = q;
         }else{
             if(t > 0){
-                r.push_back(std::make_pair(d, d == x_prime ? t + 1 : t));
+                if(d == x_prime){ ++t; }
+                if((t * num) % den != 0){ return x_prime; }
+                r.push_back(std::make_pair(d, t));
             }
             d += 2;
             t = 0;
@@ -38,27 +39,24 @@ std::vector<std::pair<std::int64_t, std::size_t>> factorize(std::int64_t x_prime
     auto iter = std::find_if(
         r.begin(),
         r.end(),
-        [x](const std::pair<std::int64_t, std::size_t> &a){ return a.first == x; }
+        [x](const std::pair<std::int64_t, std::int64_t> &a){ return a.first == x; }
     );
     if(iter == r.end()){
         r.push_back(std::make_pair(x, t + 1));
+        iter = r.end();
+        --iter;
     }else{
-        iter->second = t + 1;
+        iter->second += t + 1;
     }
-    return r;
+    if((iter->second * num) % den != 0){ return x_prime; }
+    std::int64_t u = 1;
+    for(auto iter = r.begin(); iter != r.end(); ++iter){
+        u *= static_cast<std::int64_t>(std::powl(iter->first, iter->second * num / den));
+    }
+    return u;
 }
 
 algebraic::algebraic() : value(0), next(nullptr), e(nullptr), c(nullptr){}
-
-auto nd_pow = [](std::int64_t n, std::int64_t d, const std::vector<std::pair<std::int64_t, std::size_t>> &factorized_n){
-    std::int64_t v = 0, w = 1;
-    for(auto iter = factorized_n.begin(); iter != factorized_n.end(); ++iter){
-        std::int64_t r = iter->second * n / d, s = (iter->second * n) % d;
-        v += r;
-        w *= std::pow(iter->first, s);
-    }
-    return std::make_pair(v, w);
-};
 
 auto linked_multiply = [](algebraic *p, algebraic *q){
     p = p->next, q = q->next;
@@ -78,29 +76,21 @@ auto linked_multiply = [](algebraic *p, algebraic *q){
         r->e = algebraic::copy_mono(p->e);
         r->value = p->value * q->value;
         r->value.normalize();
-        {
-            auto factorized = factorize(r->value.numerator());
-            auto vw = nd_pow(n, d, factorized);
-            ;
-        }
-        {
-            auto factorized_d = factorize(r->value.denominator());
-            auto vw = nd_pow(n, d, factorized_d);
-            ;
-        }
     }
 };
 
 void algebraic::test(){
-    algebraic *a = constant(rational(29, 36));
-    a->next->e = new_node();
-    a->next->e->value = rational(1, 2);
+    std::int64_t a = factorize_nd(2244531326976ll, 5, 4);
 
-    algebraic *b = constant(rational(5, 36));
-    b->next->e = new_node();
-    b->next->e->value = rational(1, 2);
+    //algebraic *a = constant(rational(29, 36));
+    //a->next->e = new_node();
+    //a->next->e->value = rational(1, 2);
 
-    linked_multiply(a, b);
+    //algebraic *b = constant(rational(5, 36));
+    //b->next->e = new_node();
+    //b->next->e->value = rational(1, 2);
+
+    //linked_multiply(a, b);
 
     return;
 }

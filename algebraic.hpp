@@ -52,7 +52,7 @@ public:
     // 値
     rational value;
 
-    // value^(e) * c->value^(c->e) * c->c->value^(c->c->e) * c->c->c->value^(c->c->c->e) * ...
+    // n^(e)/d * c->n^(c->e)/c->d * c->c->n^(c->c->e)/c->c->d * c->c->c->n^(c->c->c->e)/c->c->c->d * ...
     // +
     // next (recursive structure...)
     // +

@@ -12,14 +12,14 @@ namespace algebraic_impl{
 // x_prime
 std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t den){
     std::int64_t x = x_prime;
-    std::vector<std::pair<std::int64_t, std::int64_t>> r;
-    std::size_t t = 0;
+    std::int64_t t = 0, u = 1, tt = 0;
     while(x >= 4 && (x & 1) == 0){
-        ++t;
+        ++tt;
         x >>= 1;
     }
-    if(t > 0){ r.push_back(std::make_pair(2, t)); }
-    t = 0;
+    if(tt > 0){
+        if((tt * num) % den != 0){ return x_prime; }
+    }
     std::int64_t d = 3, q = x / d;
     while(q >= d){
         if(x % d == 0){
@@ -29,68 +29,61 @@ std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t d
             if(t > 0){
                 if(d == x_prime){ ++t; }
                 if((t * num) % den != 0){ return x_prime; }
-                r.push_back(std::make_pair(d, t));
+                u *= static_cast<std::int64_t>(std::powl(long double(d), long double(t * num / den)));
             }
             d += 2;
             t = 0;
         }
         q = x / d;
     }
-    auto iter = std::find_if(
-        r.begin(),
-        r.end(),
-        [x](const std::pair<std::int64_t, std::int64_t> &a){ return a.first == x; }
-    );
-    if(iter == r.end()){
-        r.push_back(std::make_pair(x, t + 1));
-        iter = r.end();
-        --iter;
+    if(x == 2){
+        t = (d == 2 ? tt : 0) + t + 1;
+        if((t * num) % den != 0){ return x_prime; }
+        u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
     }else{
-        iter->second += t + 1;
-    }
-    if((iter->second * num) % den != 0){ return x_prime; }
-    std::int64_t u = 1;
-    for(auto iter = r.begin(); iter != r.end(); ++iter){
-        u *= static_cast<std::int64_t>(std::powl(iter->first, iter->second * num / den));
+        ++t;
+        if((t * num) % den != 0){ return x_prime; }
+        u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
+        if((tt * num) % den != 0){ return x_prime; }
+        u *= static_cast<std::int64_t>(std::powl(long double(2), long double(tt * num / den)));
     }
     return u;
 }
 
 algebraic::algebraic() : value(0), next(nullptr), e(nullptr), c(nullptr){}
 
-auto linked_multiply = [](algebraic *p, algebraic *q){
-    p = p->next, q = q->next;
-    algebraic *p1 = nullptr;
-    int compare_result = 0;
-    if(q){
-        for(; p; p1 = p, p = p->c){
-            compare_result = algebraic::compare(p->e, q->e);
-            if(compare_result <= 0){ break; }
-        }
-    }
-    if(!p || compare_result < 0){
-        (p ? p : p1)->c = algebraic::copy(q);
-    }else{
-        algebraic *r = algebraic::new_node();
-        std::int64_t n = p->e->value.numerator(), d = p->e->value.denominator();
-        r->e = algebraic::copy_mono(p->e);
-        r->value = p->value * q->value;
-        r->value.normalize();
-    }
-};
-
 void algebraic::test(){
-    std::int64_t a = factorize_nd(2244531326976ll, 5, 4);
+    auto linked_multiply = [](algebraic *p, algebraic *q){
+        p = p->next, q = q->next;
+        algebraic *p1 = nullptr;
+        int compare_result = 0;
+        if(q){
+            for(; p; p1 = p, p = p->c){
+                compare_result = algebraic::compare(p->e, q->e);
+                if(compare_result <= 0){ break; }
+            }
+        }
+        if(!p || compare_result < 0){
+            (p ? p : p1)->c = algebraic::copy(q);
+        }else{
+            algebraic *r = algebraic::new_node();
+            std::int64_t n = p->e->value.numerator(), d = p->e->value.denominator();
+            r->value = p->value * q->value;
+            r->value.normalize();
+            std::int64_t s = factorize_nd(r->value.numerator(), n, d), t = factorize_nd(r->value.denominator(), n, d);
+            r->value = rational(s, t);
+        }
+    };
 
-    //algebraic *a = constant(rational(29, 36));
-    //a->next->e = new_node();
-    //a->next->e->value = rational(1, 2);
+    algebraic *a = constant(rational(18, 36));
+    a->next->e = new_node();
+    a->next->e->value = rational(1, 2);
 
-    //algebraic *b = constant(rational(5, 36));
-    //b->next->e = new_node();
-    //b->next->e->value = rational(1, 2);
+    algebraic *b = constant(rational(2, 36));
+    b->next->e = new_node();
+    b->next->e->value = rational(1, 2);
 
-    //linked_multiply(a, b);
+    linked_multiply(a, b);
 
     return;
 }
@@ -273,25 +266,6 @@ void algebraic::dispose(algebraic *p){
 
 bool algebraic::is_exist(const algebraic *p){
     return p != nullptr;
-}
-
-std::ostream& operator<< (std::ostream& os, const algebraic &a){
-    const algebraic *p = &a;
-    while(p = p->next){
-        if(p != a.next){ os << "+"; }
-        os << p->value;
-        if(p->c){
-            os << "*(";
-            os << *(p->c);
-            os << ")";
-        }
-        if(p->c && p->c->e){
-            os << "^(";
-            os << *(p->c->e);
-            os << ")";
-        }
-    }
-    return os;
 }
 
 } // namespace algebraic_impl

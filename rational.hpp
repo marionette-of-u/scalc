@@ -44,20 +44,20 @@ std::int64_t gcd_binary(std::int64_t u, std::int64_t v){
     }
 }
 
-template<class Signature>
+template<bool ImplicitExponentialNumerator = true>
 class rational{
 private:
     struct helper{ std::int64_t parts[2]; };
     typedef std::int64_t (helper::* bool_type)[2];
 
 public:
-    rational() : num(0), den(1){}
-    rational(std::int64_t n) : num(n), den(1){}
-    rational(std::int64_t n, std::int64_t d) : num(n), den(d){}
-    rational &operator =(std::int64_t n){ return assign(n, 1); }
+    inline rational() : num(0), den(1){}
+    inline rational(std::int64_t n) : num(n), den(1){}
+    inline rational(std::int64_t n, std::int64_t d) : num(n), den(d){}
+    inline rational &operator =(std::int64_t n){ return assign(n, 1); }
     rational &assign(std::int64_t n, std::int64_t d);
-    std::int64_t numerator () const{ return num; }
-    std::int64_t denominator () const{ return den; }
+    inline std::int64_t numerator () const{ return num; }
+    inline std::int64_t denominator () const{ return den; }
     rational &operator +=(const rational &r);
     rational &operator -=(const rational &r);
     rational &operator *=(const rational &r);
@@ -89,26 +89,28 @@ private:
     bool test_invariant() const;
 };
 
-template<class Signature>
-inline rational<Signature> &rational<Signature>::assign(std::int64_t n, std::int64_t d){
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::assign(std::int64_t n, std::int64_t d){
     num = n;
     den = d;
-    normalize();
+    if(ImplicitExponentialNumerator){
+        normalize();
+    }
     return *this;
 }
 
-template<class Signature>
-inline rational<Signature> operator +(const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> operator +(const rational<ImplicitExponentialNumerator> &r){
     return r;
 }
 
-template<class Signature>
-inline rational<Signature> operator -(const rational<Signature> &r){
-    return rational<Signature>(-r.numerator(), r.denominator());
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> operator -(const rational<ImplicitExponentialNumerator> &r){
+    return rational<ImplicitExponentialNumerator>(-r.numerator(), r.denominator());
 }
 
-template<class Signature>
-rational<Signature> &rational<Signature>::operator+= (const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator+= (const rational<ImplicitExponentialNumerator> &r){
     std::int64_t r_num = r.num;
     std::int64_t r_den = r.den;
     std::int64_t g = gcd_binary<void>(den, r_den);
@@ -120,15 +122,15 @@ rational<Signature> &rational<Signature>::operator+= (const rational<Signature> 
     return *this;
 }
 
-template<class Signature>
-inline rational<Signature> rational<Signature>::operator+ (const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> rational<ImplicitExponentialNumerator>::operator+ (const rational<ImplicitExponentialNumerator> &r) const{
     rational a = *this;
     a += r;
     return a;
 }
 
-template<class Signature>
-rational<Signature> &rational<Signature>::operator-= (const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator-= (const rational<ImplicitExponentialNumerator> &r){
     std::int64_t r_num = r.num;
     std::int64_t r_den = r.den;
     std::int64_t g = gcd_binary<void>(den, r_den);
@@ -140,15 +142,15 @@ rational<Signature> &rational<Signature>::operator-= (const rational<Signature> 
     return *this;
 }
 
-template<class Signature>
-inline rational<Signature> rational<Signature>::operator- (const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> rational<ImplicitExponentialNumerator>::operator- (const rational<ImplicitExponentialNumerator> &r) const{
     rational a = *this;
     a -= r;
     return a;
 }
 
-template<class Signature>
-rational<Signature> &rational<Signature>::operator*= (const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator*= (const rational<ImplicitExponentialNumerator> &r){
     std::int64_t r_num = r.num;
     std::int64_t r_den = r.den;
     std::int64_t gcd1 = gcd_binary<void>(num, r_den);
@@ -158,15 +160,15 @@ rational<Signature> &rational<Signature>::operator*= (const rational<Signature> 
     return *this;
 }
 
-template<class Signature>
-inline rational<Signature> rational<Signature>::operator* (const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> rational<ImplicitExponentialNumerator>::operator* (const rational<ImplicitExponentialNumerator> &r) const{
     rational a = *this;
     a *= r;
     return a;
 }
 
-template<class Signature>
-rational<Signature> &rational<Signature>::operator/= (const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator/= (const rational<ImplicitExponentialNumerator> &r){
     std::int64_t r_num = r.num;
     std::int64_t r_den = r.den;
     std::int64_t zero(0);
@@ -185,47 +187,47 @@ rational<Signature> &rational<Signature>::operator/= (const rational<Signature> 
     return *this;
 }
 
-template<class Signature>
-inline rational<Signature> rational<Signature>::operator/ (const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator> rational<ImplicitExponentialNumerator>::operator/ (const rational<ImplicitExponentialNumerator> &r) const{
     rational a = *this;
     a += r;
     return a;
 }
 
-template<class Signature>
-inline rational<Signature>& rational<Signature>::operator+= (std::int64_t i){
-    return operator+= (rational<Signature>(i));
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator>& rational<ImplicitExponentialNumerator>::operator+= (std::int64_t i){
+    return operator+= (rational<ImplicitExponentialNumerator>(i));
 }
 
-template<class Signature>
-inline rational<Signature>& rational<Signature>::operator -=(std::int64_t i){
-    return operator-= (rational<Signature>(i));
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator>& rational<ImplicitExponentialNumerator>::operator -=(std::int64_t i){
+    return operator-= (rational<ImplicitExponentialNumerator>(i));
 }
 
-template<class Signature>
-inline rational<Signature>& rational<Signature>::operator*= (std::int64_t i){
-    return operator*= (rational<Signature>(i));
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator>& rational<ImplicitExponentialNumerator>::operator*= (std::int64_t i){
+    return operator*= (rational<ImplicitExponentialNumerator>(i));
 }
 
-template<class Signature>
-inline rational<Signature>& rational<Signature>::operator/= (std::int64_t i){
-    return operator/= (rational<Signature>(i));
+template<bool ImplicitExponentialNumerator>
+inline rational<ImplicitExponentialNumerator>& rational<ImplicitExponentialNumerator>::operator/= (std::int64_t i){
+    return operator/= (rational<ImplicitExponentialNumerator>(i));
 }
 
-template<class Signature>
-inline const rational<Signature> &rational<Signature>::operator ++(){
+template<bool ImplicitExponentialNumerator>
+inline const rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator ++(){
     num += den;
     return *this;
 }
 
-template<class Signature>
-inline const rational<Signature> &rational<Signature>::operator --(){
+template<bool ImplicitExponentialNumerator>
+inline const rational<ImplicitExponentialNumerator> &rational<ImplicitExponentialNumerator>::operator --(){
     num -= den;
     return *this;
 }
 
-template<class Signature>
-bool rational<Signature>::operator <(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator <(const rational<ImplicitExponentialNumerator> &r) const{
     std::int64_t const  zero(0);
     struct { std::int64_t  n, d, q, r; }  ts = { this->num, this->den, this->num /
      this->den, this->num % this->den }, rs = { r.num, r.den, r.num / r.den,
@@ -253,13 +255,13 @@ bool rational<Signature>::operator <(const rational<Signature> &r) const{
     }
 }
 
-template<class Signature>
-bool rational<Signature>::operator >(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator >(const rational<ImplicitExponentialNumerator> &r) const{
     return r.operator <(*this);
 }
 
-template<class Signature>
-bool rational<Signature>::operator <=(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator <=(const rational<ImplicitExponentialNumerator> &r) const{
     std::int64_t const  zero(0);
     struct { std::int64_t  n, d, q, r; }  ts = { this->num, this->den, this->num /
      this->den, this->num % this->den }, rs = { r.num, r.den, r.num / r.den,
@@ -283,53 +285,53 @@ bool rational<Signature>::operator <=(const rational<Signature> &r) const{
     if(ts.r == rs.r){
         return true;
     }else{
-        return (ts.r != zero) != static_cast<bool>(reverse);
+        return (ts.r != zero) != (reverse != 0);
     }
 }
 
-template<class Signature>
-bool rational<Signature>::operator >=(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator >=(const rational<ImplicitExponentialNumerator> &r) const{
     return r.operator <=(*this);
 }
 
-template<class Signature>
-bool rational<Signature>::operator <(std::int64_t i) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator <(std::int64_t i) const{
     std::int64_t const  zero(0);
     std::int64_t  q = this->num / this->den, r = this->num % this->den;
     while(r < zero){ r += this->den; --q; }
     return q < i;
 }
 
-template<class Signature>
-bool rational<Signature>::operator> (std::int64_t i) const{
+template<bool ImplicitExponentialNumerator>
+bool rational<ImplicitExponentialNumerator>::operator> (std::int64_t i) const{
     if(num == i && den == std::int64_t(1))
         return false;
     return !operator <(i);
 }
 
-template<class Signature>
-inline bool rational<Signature>::operator ==(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline bool rational<ImplicitExponentialNumerator>::operator ==(const rational<ImplicitExponentialNumerator> &r) const{
     return ((num == r.num) && (den == r.den));
 }
 
-template<class Signature>
-inline bool rational<Signature>::operator !=(const rational<Signature> &r) const{
+template<bool ImplicitExponentialNumerator>
+inline bool rational<ImplicitExponentialNumerator>::operator !=(const rational<ImplicitExponentialNumerator> &r) const{
     return !(*this == r);
 }
 
-template<class Signature>
-inline bool rational<Signature>::operator ==(std::int64_t i) const{
+template<bool ImplicitExponentialNumerator>
+inline bool rational<ImplicitExponentialNumerator>::operator ==(std::int64_t i) const{
     return ((den == std::int64_t(1)) && (num == i));
 }
 
-template<class Signature>
-inline bool rational<Signature>::test_invariant() const{
+template<bool ImplicitExponentialNumerator>
+inline bool rational<ImplicitExponentialNumerator>::test_invariant() const{
     return (this->den > std::int64_t(0)) && (gcd_binary<void>(this->num, this->den) ==
      std::int64_t(1));
 }
 
-template<class Signature>
-void rational<Signature>::normalize(){
+template<bool ImplicitExponentialNumerator>
+void rational<ImplicitExponentialNumerator>::normalize(){
     std::int64_t zero(0);
     if(den == zero)
         throw bad_rational();
@@ -346,26 +348,28 @@ void rational<Signature>::normalize(){
     }
 }
 
-template<class Signature>
-std::ostream& operator<< (std::ostream& os, const rational<Signature> &r){
+template<bool ImplicitExponentialNumerator>
+std::ostream& operator<< (std::ostream& os, const rational<ImplicitExponentialNumerator> &r){
     os << r.numerator() << '/' << r.denominator();
     return os;
 }
 
 } // namespace rational_impl
 
-typedef rational_impl::rational<void> rational;
+typedef rational_impl::rational<true>  rational;
+typedef rational_impl::rational<false> explicit_exponential_rational;
 
-template<class T>
-inline T rational_cast(const rational &src){
+template<class T, bool Cond>
+inline T rational_cast(const rational_impl::rational<Cond> &src){
     return static_cast<T>(src.numerator()) / static_cast<T>(src.denominator());
 }
 
-inline rational abs(const rational &r){
+template<bool Cond>
+inline rational_impl::rational<Cond> abs(const rational_impl::rational<Cond> &r){
     if(r.numerator() >= std::int64_t(0)){
         return r;
     }
-    return rational(-r.numerator(), r.denominator());
+    return rational_impl::rational<Cond>(-r.numerator(), r.denominator());
 }
 
 #endif // SCALC_ALGEBRAIC_HPP

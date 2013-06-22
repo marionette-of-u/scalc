@@ -87,36 +87,36 @@ int lexicographic_compare(const node *l, const node *r){
     switch(l_class){
     case 5:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(abs(l->real), abs(r->real)); }
-        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
+        if(result == 0){ result = primitive_compare(l->real, r->real); }
+        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 4:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
+        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 3:
         result = exponent_compare(l->e, r->e);
-        if(result == 0){ result = primitive_compare(abs(l->real), abs(r->real)); }
+        if(result == 0){ result = primitive_compare(l->real, r->real); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 2:
-        result = primitive_compare(abs(l->real), abs(r->real));
-        if(result == 0){ result = primitive_compare(abs(l->imag), abs(r->imag)); }
+        result = primitive_compare(l->real, r->real);
+        if(result == 0){ result = primitive_compare(l->imag, r->imag); }
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 1:
-        result = primitive_compare(abs(l->imag), abs(r->imag));
+        result = primitive_compare(l->imag, r->imag);
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 
     case 0:
-        result = primitive_compare(abs(l->real), abs(r->real));
+        result = primitive_compare(l->real, r->real);
         if(result == 0){ result = lexicographic_compare(l, r); }
         break;
 

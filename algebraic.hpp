@@ -1,4 +1,5 @@
-﻿#include <cstdint>
+﻿#include <map>
+#include <cstdint>
 #include "rational.hpp"
 
 namespace algebraic_impl{
@@ -6,6 +7,8 @@ namespace algebraic_impl{
 class algebraic{
 public:
     algebraic();
+
+    algebraic(algebraic &&other);
 
     // テスト
     static void test();
@@ -25,17 +28,18 @@ public:
     // 符号反転
     static void change_sign(algebraic *p);
 
-    // 単体コピー
-    static algebraic *copy_mono(const algebraic *p);
-
     // コピー
     static algebraic *copy(const algebraic *p);
 
     // 定数を生成
-    static algebraic *constant(const rational &n);
+    // n.num^e / n.den
+    static algebraic *constant(explicit_exponential_rational n, const rational &e = 0);
 
     // 式を比較
-    static int compare(const algebraic *lhs, const algebraic *rhs, bool mono = false);
+    static int compare(const algebraic *lhs, const algebraic *rhs);
+
+    // 項を比較
+    static int compare_term(const algebraic *lhs, const algebraic *rhs);
 
     // 新たな要素を生成する
     static algebraic *new_node();
@@ -46,27 +50,11 @@ public:
     // 全ての項を削除する
     static void dispose(algebraic *p);
 
-    // 存在判定
-    static bool is_exist(const algebraic *p);
+    // value.n^key / value.d
+    std::map<rational, explicit_exponential_rational> value;
 
-    // 値
-    rational value;
-
-    // n^(e)/d * c->n^(c->e)/c->d * c->c->n^(c->c->e)/c->c->d * c->c->c->n^(c->c->c->e)/c->c->c->d * ...
-    // +
-    // next (recursive structure...)
-    // +
-    // :
-    // :
-
-    // i-class linked list.
+    // 次の項
     algebraic *next;
-
-    // ii-class linked list.
-    algebraic *e;
-
-    // iii-class linked list.
-    algebraic *c;
 
 private:
     inline algebraic(const algebraic&){}

@@ -1,5 +1,4 @@
-﻿#include <vector>
-#include <algorithm>
+﻿#include <algorithm>
 #include <utility>
 #include <functional>
 #include <cmath>
@@ -13,12 +12,9 @@ namespace algebraic_impl{
 std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t den){
     std::int64_t x = x_prime;
     std::int64_t t = 0, u = 1, tt = 0;
-    while(x >= 4 && (x & 1) == 0){
+    while(x >= 2 && (x & 1) == 0){
         ++tt;
         x >>= 1;
-    }
-    if(tt > 0){
-        if((tt * num) % den != 0){ return x_prime; }
     }
     std::int64_t d = 3, q = x / d;
     while(q >= d){
@@ -36,77 +32,116 @@ std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t d
         }
         q = x / d;
     }
-    if(x == 2){
-        t = (d == 2 ? tt : 0) + t + 1;
-        if((t * num) % den != 0){ return x_prime; }
-        u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
-    }else{
-        ++t;
-        if((t * num) % den != 0){ return x_prime; }
-        u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
-        if((tt * num) % den != 0){ return x_prime; }
-        u *= static_cast<std::int64_t>(std::powl(long double(2), long double(tt * num / den)));
-    }
+    ++t;
+    if(t > 1 && (t * num) % den != 0){ return x_prime; }
+    u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
+    u *= static_cast<std::int64_t>(std::powl(long double(2), long double(tt * num / den)));
     return u;
 }
 
-algebraic::algebraic() : value(0), next(nullptr), e(nullptr), c(nullptr){}
+// lexicographical_compare (int ver.)
+template<class LhsIter, class RhsIter>
+int int_lexicographical_compare(LhsIter first1, LhsIter last1, RhsIter first2, RhsIter last2){
+    for(; first1 != last1 && first2 != last2; ++first1, ++first2){
+        if(*first1 < *first2){ return -1; }
+        if(*first2 < *first1){ return +1; };
+    }
+    return first1 == last1 && first2 == last2 ? 0 : first1 != last1 ? -1 : +1;
+}
+
+algebraic::algebraic() : value(), next(nullptr){}
+
+algebraic::algebraic(algebraic &&other) :
+    value(std::move(other.value)),
+    next(std::move(other.next))
+{}
 
 void algebraic::test(){
-    auto linked_multiply = [](algebraic *p, algebraic *q){
-        p = p->next, q = q->next;
-        algebraic *p1 = nullptr;
-        int compare_result = 0;
-        if(q){
-            for(; p; p1 = p, p = p->c){
-                compare_result = algebraic::compare(p->e, q->e);
-                if(compare_result <= 0){ break; }
+    auto linked_multiply = [](const algebraic *x, const algebraic *y) -> algebraic*{
+        auto prime_multiply = [](const rational &e, const explicit_exponential_rational &r){
+            std::int64_t n = e.numerator(), d = e.denominator();
+            std::int64_t s = factorize_nd(r.numerator(), n, d), t = factorize_nd(r.denominator(), n, d);
+            return explicit_exponential_rational(s, t);
+        };
+
+        algebraic *p, *p1, *q = nullptr, *r = new_node();
+        const algebraic *z;
+        while(y = y->next){
+            p1 = r, p = p1->next, z = x;
+            while(z = z->next){
+                if(!q){ q = new_node(); }
+                q->value.insert(std::make_pair(0, 1));
+                {
+                    auto iter = y->value.begin(); ++iter;
+                    for(; iter != y->value.end(); ++iter){
+                        auto jter = z->value.find(iter->first);
+                        if(jter == z->value.end()){ continue; }
+                        explicit_exponential_rational r = iter->second * jter->second;
+                        explicit_exponential_rational v = prime_multiply(iter->first, r);
+                        if(v == r){
+                            q->value.insert(std::make_pair(iter->first, v));
+                        }else{
+                            q->value[0] *= v.numerator();
+                        }
+                    }
+                }
+                const algebraic *a[2][2] = { { y, z }, { z, y } };
+                for(int i = 0; i < 2; ++i){
+                    auto iter = a[i][0]->value.begin(); ++iter;
+                    for(; iter != a[i][0]->value.end(); ++iter){
+                        auto jter = a[i][1]->value.find(iter->first);
+                        if(jter != a[i][1]->value.end()){ continue; }
+                        q->value.insert(*iter);
+                    }
+                }
+                int compare_result = 0;
+                while(p){
+                    auto iter = p->value.begin(); ++iter;
+                    auto jter = q->value.begin(); ++jter;
+                    compare_result = int_lexicographical_compare(iter, p->value.end(), jter, q->value.end());
+                    if(compare_result <= 0){ break; }
+                    p1 = p, p = p->next;
+                }
+                if(!p || compare_result < 0){
+                    p1->next = q, p1 = q, p1->next = p;
+                    q = nullptr;
+                }else{
+                    p->value[0] += q->value[0];
+                    if(p->value[0] != 0){
+                        p1 = p, p = p->next;
+                    }else{
+                        p = p->next;
+                        dispose_node(p1->next);
+                        p1->next = p;
+                    }
+                }
             }
         }
-        if(!p || compare_result < 0){
-            (p ? p : p1)->c = algebraic::copy(q);
-        }else{
-            algebraic *r = algebraic::new_node();
-            std::int64_t n = p->e->value.numerator(), d = p->e->value.denominator();
-            r->value = p->value * q->value;
-            r->value.normalize();
-            std::int64_t s = factorize_nd(r->value.numerator(), n, d), t = factorize_nd(r->value.denominator(), n, d);
-            r->value = rational(s, t);
-        }
+        if(q){ dispose_node(q); }
+        return r;
     };
 
-    algebraic *a = constant(rational(18, 36));
-    a->next->e = new_node();
-    a->next->e->value = rational(1, 2);
+    //algebraic *p, *q, *r, *a, *b, *c, *d;
 
-    algebraic *b = constant(rational(2, 36));
-    b->next->e = new_node();
-    b->next->e->value = rational(1, 2);
+    //p = constant(explicit_exponential_rational(3, 1), rational(1, 3));
+    //q = constant(explicit_exponential_rational(3, 1), rational(1, 3));
+    //r = linked_multiply(p, q);
+    //q = constant(explicit_exponential_rational(2, 1), rational(1, 2));
+    //a = linked_multiply(r, q);
 
-    linked_multiply(a, b);
+    //p = constant(explicit_exponential_rational(3, 1), rational(1, 3));
+    //q = constant(explicit_exponential_rational(2, 1), rational(1, 2));
+    //b = linked_multiply(p, q);
 
-    return;
+    //add(a, b);
+    //c = copy(a);
+
+    //d = linked_multiply(a, c);
+
+    explicit_exponential_rational a = factorize_nd(81, 1, 3);
 }
 
 algebraic *algebraic::multiply(const algebraic *x, const algebraic *y){
-
-    //algebraic *p, *p1, *q, *r = new_node();
-    //const algebraic *z;
-    //r = new_node(), q = nullptr;
-    //while(y = y->next){
-    //    p1 = r, p = p1->next, z = x;
-    //    while(z = z->next){
-    //        if(!q){ q = new_node(); }
-    //        // ** TODO **
-    //        // q->value = y->value * z->value;
-    //        // q->e = y->e + z->e;
-    //        while(p){
-    //            for(; ; ){
-    //                ;
-    //            }
-    //        }
-    //    }
-    //}
 
     return nullptr;
 }
@@ -122,19 +157,20 @@ void algebraic::add(algebraic *p, algebraic *q){
     q1 = q, q = q->next;
     dispose_node(q1);
     while(q){
-        int exponent_compare_result;
+        int compare_result;
         while(p){
-            exponent_compare_result = compare(p->c, q->c, true);
-            if(exponent_compare_result == 0){ exponent_compare_result = compare(p->e, q->e); }
-            if(exponent_compare_result <= 0){ break; }
+            auto iter = p->value.begin(), jter = q->value.begin();
+            ++iter, ++jter;
+            compare_result = int_lexicographical_compare(iter, p->value.end(), jter, q->value.end());
+            if(compare_result <= 0){ break; }
             p1 = p, p = p->next;
         }
-        if(!p || exponent_compare_result < 0){
+        if(!p || compare_result < 0){
             p1->next = q, p1 = q, q = q->next;
             p1->next = p;
         }else{
-            p->value += q->value;
-            if(p->value != 0){
+            p->value[0] += q->value[0];
+            if(p->value[0] != 0){
                 p1 = p, p = p->next;
             }else{
                 p = p->next;
@@ -148,100 +184,57 @@ void algebraic::add(algebraic *p, algebraic *q){
 
 void algebraic::change_sign(algebraic *p){
     while(p = p->next){
-        p->value = -p->value;
+        explicit_exponential_rational &r = p->value.begin()->second;
+        r = -r;
     }
-}
-
-algebraic *algebraic::copy_mono(const algebraic *p){
-    if(!p){ return nullptr; }
-    algebraic *q = new_node();
-    q->value = p->value;
-    q->e = copy_mono(p->e);
-    q->c = copy_mono(p->c);
-    return q;
 }
 
 algebraic *algebraic::copy(const algebraic *p){
     if(!p){ return nullptr; }
     algebraic *q, *r;
     q = r = new_node();
-    while(p){
+    while(p = p->next){
         r = r->next = new_node();
         r->value = p->value;
-        r->e = copy_mono(p->e);
-        r->c = copy_mono(p->c);
-        p = p->next;
     }
     return q;
 }
 
-algebraic *algebraic::constant(const rational &n){
+algebraic *algebraic::constant(explicit_exponential_rational n, const rational &e){
     algebraic *p = new_node();
     if(n != 0){
         algebraic *q = new_node();
-        q->value = n;
+        if(e != 0){
+            q->value.insert(std::make_pair(0, n < 0 ? -1 : +1));
+            if(n < 0){ n = -n; }
+        }
+        q->value.insert(std::make_pair(e, n));
         p->next = q;
     }
     return p;
 }
 
-int algebraic::compare(const algebraic *lhs, const algebraic *rhs, bool mono){
-    auto factor_class = [](const algebraic *f) -> int{
-        if(is_exist(f->e)){
-            if(is_exist(f->c)){
-                return 3;
-            }
-            return 2;
-        }else{
-            if(is_exist(f->c)){
-                return 1;
-            }
-            return 0;
-        }
-    };
+template<bool Cond>
+int compare_common(const algebraic *lhs, const algebraic *rhs){
     if(!lhs && !rhs){ return 0; }
-    if(!lhs && rhs){ return -1; }
-    if(lhs && !rhs){ return +1; }
-    if(!mono){
-        lhs = lhs->next, rhs = rhs->next;
-        if(!lhs && !rhs){ return 0; }
-        if(!lhs && rhs){ return -1; }
-        if(lhs && !rhs){ return +1; }
-    }
-    algebraic *lhs_e = lhs->e, *rhs_e = rhs->e;
-    algebraic *lhs_c = lhs->c, *rhs_c = rhs->c;
-    int lhs_class = factor_class(lhs), rhs_class = factor_class(rhs);
-    if(lhs_class < rhs_class){
-        return -1;
-    }else if(lhs_class > rhs_class){
-        return +1;
-    }
-    int result;
-    switch(lhs_class){
-    case 3:
-        result = compare(lhs_e, rhs_e);
-        if(result == 0){ result = compare(lhs_c, rhs_c); }
-        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
-        break;
+    if(!lhs && rhs){ return rhs->value.begin()->second >= 0 ? -1 : +1; }
+    if(lhs && !rhs){ return lhs->value.begin()->second >= 0 ? +1 : -1; }
+    return
+        lhs->value < rhs->value
+            ? (rhs->value.begin()->second >= 0 ? -1 : +1)
+            : lhs->value > rhs->value
+                ? (lhs->value.begin()->second >= 0 ? +1 : -1)
+                : Cond
+                    ? compare_common<true>(lhs->next, rhs->next)
+                    : 0;
+}
 
-    case 2:
-        result = compare(lhs_e, rhs_e);
-        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
-        break;
+int algebraic::compare(const algebraic *lhs, const algebraic *rhs){
+    return compare_common<true>(lhs, rhs);
+}
 
-    case 1:
-        result = compare(lhs_c, rhs_c);
-        if(result == 0){ result = primitive_compare(abs(lhs->value), abs(rhs->value)); }
-        break;
-
-    case 0:
-        result = primitive_compare(abs(lhs->value), abs(rhs->value));
-        break;
-
-    default:
-        result = 0;
-    }
-    return result;
+int algebraic::compare_term(const algebraic *lhs, const algebraic *rhs){
+    return compare_common<false>(lhs, rhs);
 }
 
 algebraic *algebraic::new_node(){
@@ -256,16 +249,10 @@ void algebraic::dispose(algebraic *p){
     if(!p){ return; }
     algebraic *q = p;
     while(q->next){
-        dispose(q->e);
-        dispose(q->c);
         p = q->next;
         dispose_node(q);
         q = p;
     }
-}
-
-bool algebraic::is_exist(const algebraic *p){
-    return p != nullptr;
 }
 
 } // namespace algebraic_impl

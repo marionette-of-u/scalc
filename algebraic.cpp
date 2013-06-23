@@ -54,13 +54,12 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
         in_int_iter = static_cast<std::int64_t>(std::powl(long double(2), long double(t * p.numerator() / p.denominator())));
         u = (t * p.numerator()) % p.denominator();
         if(u > 0){
-            root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), 2);
+            root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), 2);
         }
     }
-    std::int64_t d = 3, q = x / d, y = x;
+    std::int64_t d = 3, q = x / d;
     t = 0;
     while(q >= d){
-        y = x;
         if(x % d == 0){
             ++t, x = q;
         }else{
@@ -69,8 +68,8 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
                 if(d == target){ ++t; }
                 in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(t * p.numerator() / p.denominator())));
                 u = (t * p.numerator()) % p.denominator();
-                if(u != 0){
-                    root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), d);
+                if(u > 0){
+                    root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), d);
                 }
             }
             d += 2;
@@ -81,9 +80,9 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
     ++t;
     if(t > 1){
         f = false;
-        root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), x);
+        root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), x);
         u = (t * p.numerator()) / p.denominator();
-        if(u != 0){
+        if(u > 0){
             in_int_iter = static_cast<std::int64_t>(std::powl(long double(x), long double(u)));
         }
     }
@@ -177,6 +176,11 @@ void algebraic::test(){
     //c = copy(a);
 
     //d = linked_multiply(a, c);
+
+    {
+        algebraic *q = constant(1);
+        normalize_nth_root(q->next->value, 9, rational(1, 3));
+    }
 
     {
         algebraic *q = constant(1);

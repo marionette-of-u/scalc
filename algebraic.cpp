@@ -54,7 +54,7 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
         in_int_iter = static_cast<std::int64_t>(std::powl(long double(2), long double(t * p.numerator() / p.denominator())));
         u = (t * p.numerator()) % p.denominator();
         if(u > 0){
-            root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), 2);
+            root_iter = std::make_pair(rational(u, p.denominator()), 2);
         }
     }
     std::int64_t d = 3, q = x / d;
@@ -69,7 +69,7 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
                 in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(t * p.numerator() / p.denominator())));
                 u = (t * p.numerator()) % p.denominator();
                 if(u > 0){
-                    root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), d);
+                    root_iter = std::make_pair(rational(u, p.denominator()), d);
                 }
             }
             d += 2;
@@ -80,7 +80,10 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
     ++t;
     if(t > 1){
         f = false;
-        root_iter = std::make_pair(rational((t * p.numerator()) % p.denominator(), p.denominator()), x);
+        u = (t * p.numerator()) % p.denominator();
+        if(u > 0){
+            root_iter = std::make_pair(rational(u, p.denominator()), x);
+        }
         u = (t * p.numerator()) / p.denominator();
         if(u > 0){
             in_int_iter = static_cast<std::int64_t>(std::powl(long double(x), long double(u)));
@@ -160,6 +163,13 @@ void algebraic::test(){
         return r;
     };
 
+    algebraic *a = constant(3, rational(1, 2));
+    add(a, constant(4, rational(1, 4)));
+
+    algebraic *p = constant(5, rational(3, 5));
+    add(p, constant(3, rational(1, 2)));
+    algebraic *r = linked_multiply(a, p);
+
     //algebraic *p, *q, *r, *a, *b, *c, *d;
 
     //p = constant(explicit_exponential_rational(3, 1), rational(1, 3));
@@ -176,26 +186,6 @@ void algebraic::test(){
     //c = copy(a);
 
     //d = linked_multiply(a, c);
-
-    {
-        algebraic *q = constant(1);
-        normalize_nth_root(q->next->value, 9, rational(1, 3));
-    }
-
-    {
-        algebraic *q = constant(1);
-        normalize_nth_root(q->next->value, 1024, rational(3, 7));
-    }
-
-    {
-        algebraic *q = constant(1);
-        normalize_nth_root(q->next->value, 59049, rational(3, 7));
-    }
-
-    {
-        algebraic *q = constant(1);
-        normalize_nth_root(q->next->value, 314, rational(3, 14));
-    }
 }
 
 algebraic *algebraic::multiply(const algebraic *x, const algebraic *y){

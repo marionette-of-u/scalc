@@ -12,7 +12,13 @@ public:
     int_multiply_iterator(algebraic::value_type &c) : parent_type(c, c.begin()){}
 
     int_multiply_iterator &operator =(const std::int64_t n){
-        (*container)[0] *= n;
+        auto iter = container->find(0);
+        if(iter == container->end()){
+            container->insert(std::make_pair(0, n));
+        }else{
+            iter->second *= n;
+        }
+        return *this;
     }
 
 private:
@@ -26,34 +32,46 @@ public:
     nth_root_multiply_iterator(algebraic::value_type &c) : parent_type(c, c.begin()){}
 
     nth_root_multiply_iterator &operator =(const std::pair<rational, std::int64_t> &n){
-        (*container)[n.first] *= n.second;
+        auto iter = container->find(n.first);
+        if(iter == container->end()){
+            container->insert(std::make_pair(n.first, n.second));
+        }else{
+            iter->second *= n.second;
+        }
+        return *this;
     }
 };
 
-// factorized_multiply
-void normalize_nth_root(
-    int_multiply_iterator in_int_iter,
-    nth_root_multiply_iterator root_iter,
-    std::int64_t x,
-    rational p
-){
+void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rational &p){
+    int_multiply_iterator in_int_iter(value);
+    nth_root_multiply_iterator root_iter(value);
     const std::int64_t target = x;
     std::int64_t t = 0, u;
-    while(x >= 2 && (x & 1) == 0){ ++t, x >>= 2; }
-    in_int_iter = t * p.numerator() / p.denominator();
-    u = (t * p.numerator()) % p.denominator();
-    if(u != 0){ root_iter = std::make_pair(p, u); }
-    std::int64_t d = 3, q = x / d;
+    bool f = true;
+    while(x >= 2 && (x & 1) == 0){ ++t, x >>= 1; }
+    if(t > 1){
+        f = false;
+        in_int_iter = static_cast<std::int64_t>(std::powl(long double(2), long double(t * p.numerator() / p.denominator())));
+        u = (t * p.numerator()) % p.denominator();
+        if(u > 0){
+            root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), 2);
+        }
+    }
+    std::int64_t d = 3, q = x / d, y = x;
     t = 0;
     while(q >= d){
+        y = x;
         if(x % d == 0){
             ++t, x = q;
         }else{
-            if(t > 0){
+            if(t > 1){
+                f = false;
                 if(d == target){ ++t; }
-                in_int_iter = t * p.numerator() / p.denominator();
+                in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(t * p.numerator() / p.denominator())));
                 u = (t * p.numerator()) % p.denominator();
-                if(u != 0){ root_iter = std::make_pair(p, u); }
+                if(u != 0){
+                    root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), d);
+                }
             }
             d += 2;
             t = 0;
@@ -62,43 +80,14 @@ void normalize_nth_root(
     }
     ++t;
     if(t > 1){
-        in_int_iter = t * p.numerator() / p.denominator();
-        u = (t * p.numerator()) % p.denominator();
-        if(u != 0){ root_iter = std::make_pair(p, u); }
-    }
-}
-
-// x_prime^(num / den) = a in N
-// OR
-// x_prime
-std::int64_t factorize_nd(std::int64_t x_prime, std::int64_t num, std::int64_t den){
-    std::int64_t x = x_prime;
-    std::int64_t t = 0, u = 1, tt = 0;
-    while(x >= 2 && (x & 1) == 0){
-        ++tt;
-        x >>= 1;
-    }
-    std::int64_t d = 3, q = x / d;
-    while(q >= d){
-        if(x % d == 0){
-            ++t;
-            x = q;
-        }else{
-            if(t > 0){
-                if(d == x_prime){ ++t; }
-                if((t * num) % den != 0){ return x_prime; }
-                u *= static_cast<std::int64_t>(std::powl(long double(d), long double(t * num / den)));
-            }
-            d += 2;
-            t = 0;
+        f = false;
+        root_iter = std::make_pair(rational((t - 1) % p.denominator(), p.denominator()), x);
+        u = (t * p.numerator()) / p.denominator();
+        if(u != 0){
+            in_int_iter = static_cast<std::int64_t>(std::powl(long double(x), long double(u)));
         }
-        q = x / d;
     }
-    ++t;
-    if(t > 1 && (t * num) % den != 0){ return x_prime; }
-    u *= static_cast<std::int64_t>(std::powl(long double(x), long double(t * num / den)));
-    u *= static_cast<std::int64_t>(std::powl(long double(2), long double(tt * num / den)));
-    return u;
+    if(f){ root_iter = std::make_pair(p, target); }
 }
 
 // lexicographical_compare (int ver.)
@@ -120,12 +109,6 @@ algebraic::algebraic(algebraic &&other) :
 
 void algebraic::test(){
     auto linked_multiply = [](const algebraic *x, const algebraic *y) -> algebraic*{
-        auto prime_multiply = [](const rational &e, const explicit_exponential_rational &r){
-            std::int64_t n = e.numerator(), d = e.denominator();
-            std::int64_t s = factorize_nd(r.numerator(), n, d), t = factorize_nd(r.denominator(), n, d);
-            return explicit_exponential_rational(s, t);
-        };
-
         algebraic *p, *p1, *q = nullptr, *r = new_node();
         const algebraic *z;
         while(y = y->next){
@@ -139,12 +122,7 @@ void algebraic::test(){
                         auto jter = z->value.find(iter->first);
                         if(jter == z->value.end()){ continue; }
                         explicit_exponential_rational r = iter->second * jter->second;
-                        explicit_exponential_rational v = prime_multiply(iter->first, r);
-                        if(v == r){
-                            q->value.insert(std::make_pair(iter->first, v));
-                        }else{
-                            q->value[0] *= v.numerator();
-                        }
+                        normalize_nth_root(q->value, r.numerator(), iter->first);
                     }
                 }
                 const algebraic *a[2][2] = { { y, z }, { z, y } };
@@ -200,7 +178,20 @@ void algebraic::test(){
 
     //d = linked_multiply(a, c);
 
-    explicit_exponential_rational a = factorize_nd(81, 1, 3);
+    {
+        algebraic *q = constant(1);
+        normalize_nth_root(q->next->value, 1024, rational(3, 7));
+    }
+
+    {
+        algebraic *q = constant(1);
+        normalize_nth_root(q->next->value, 59049, rational(3, 7));
+    }
+
+    {
+        algebraic *q = constant(1);
+        normalize_nth_root(q->next->value, 314, rational(3, 14));
+    }
 }
 
 algebraic *algebraic::multiply(const algebraic *x, const algebraic *y){

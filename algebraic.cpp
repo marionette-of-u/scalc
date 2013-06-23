@@ -6,6 +6,68 @@
 #include "algebraic.hpp"
 
 namespace algebraic_impl{
+class int_multiply_iterator : public std::insert_iterator<algebraic::value_type>{
+public:
+    typedef std::insert_iterator<algebraic::value_type> parent_type;
+    int_multiply_iterator(algebraic::value_type &c) : parent_type(c, c.begin()){}
+
+    int_multiply_iterator &operator =(const std::int64_t n){
+        (*container)[0] *= n;
+    }
+
+private:
+    int_multiply_iterator &operator =(const algebraic::value_type::value_type &v);
+    int_multiply_iterator &operator =(algebraic::value_type::value_type &&v);
+};
+    
+class nth_root_multiply_iterator : public std::insert_iterator<algebraic::value_type>{
+public:
+    typedef std::insert_iterator<algebraic::value_type> parent_type;
+    nth_root_multiply_iterator(algebraic::value_type &c) : parent_type(c, c.begin()){}
+
+    nth_root_multiply_iterator &operator =(const std::pair<rational, std::int64_t> &n){
+        (*container)[n.first] *= n.second;
+    }
+};
+
+// factorized_multiply
+void normalize_nth_root(
+    int_multiply_iterator in_int_iter,
+    nth_root_multiply_iterator root_iter,
+    std::int64_t x,
+    rational p
+){
+    const std::int64_t target = x;
+    std::int64_t t = 0, u;
+    while(x >= 2 && (x & 1) == 0){ ++t, x >>= 2; }
+    in_int_iter = t * p.numerator() / p.denominator();
+    u = (t * p.numerator()) % p.denominator();
+    if(u != 0){ root_iter = std::make_pair(p, u); }
+    std::int64_t d = 3, q = x / d;
+    t = 0;
+    while(q >= d){
+        if(x % d == 0){
+            ++t, x = q;
+        }else{
+            if(t > 0){
+                if(d == target){ ++t; }
+                in_int_iter = t * p.numerator() / p.denominator();
+                u = (t * p.numerator()) % p.denominator();
+                if(u != 0){ root_iter = std::make_pair(p, u); }
+            }
+            d += 2;
+            t = 0;
+        }
+        q = x / d;
+    }
+    ++t;
+    if(t > 1){
+        in_int_iter = t * p.numerator() / p.denominator();
+        u = (t * p.numerator()) % p.denominator();
+        if(u != 0){ root_iter = std::make_pair(p, u); }
+    }
+}
+
 // x_prime^(num / den) = a in N
 // OR
 // x_prime

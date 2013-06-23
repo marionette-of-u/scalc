@@ -51,7 +51,8 @@ public:
     static void dispose(algebraic *p);
 
     // value.n^key / value.d
-    std::map<rational, explicit_exponential_rational> value;
+    typedef std::map<rational, explicit_exponential_rational> value_type;
+    value_type value;
 
     // 次の項
     algebraic *next;

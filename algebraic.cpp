@@ -58,7 +58,7 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
     while(x >= 2 && (x & 1) == 0){ ++t, x /= 2; }
     if(t > 1){
         f = false;
-        in_int_iter = static_cast<std::int64_t>(std::powl(long double(2), long double(t * p.numerator() / p.denominator())));
+        in_int_iter = static_cast<std::int64_t>(std::pow(static_cast<long double>(2), static_cast<long double>(t * p.numerator() / p.denominator())));
         u = (t * p.numerator()) % p.denominator();
         if(u > 0){
             rational a(u, p.denominator());
@@ -81,7 +81,7 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
             if(t > 1){
                 f = false;
                 if(d == target){ ++t; }
-                in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(t * p.numerator() / p.denominator())));
+                in_int_iter = static_cast<std::int64_t>(std::pow(static_cast<long double>(d), static_cast<long double>(t * p.numerator() / p.denominator())));
                 u = (t * p.numerator()) % p.denominator();
                 if(u > 0){
                     rational a(u, p.denominator());
@@ -105,7 +105,7 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
         }
         u = (t * p.numerator()) / p.denominator();
         if(u > 0){
-            in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(u)));
+            in_int_iter = static_cast<std::int64_t>(std::pow(static_cast<long double>(d), static_cast<long double>(u)));
         }
     }
     // 入力が既に素数だった場合

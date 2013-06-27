@@ -44,11 +44,6 @@ inline std::int64_t gcd_binary(std::int64_t u, std::int64_t v){
     }
 }
 
-template<class Signature>
-inline std::int64_t lcm(std::int64_t u, std::int64_t v){
-    return (u / gcd_binary(u, v)) * v;
-}
-
 template<bool ImplicitExponentialNumerator = true>
 class rational{
 private:

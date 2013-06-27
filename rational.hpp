@@ -19,7 +19,7 @@ public:
 };
 
 template<class Signature>
-std::int64_t gcd_binary(std::int64_t u, std::int64_t v){
+inline std::int64_t gcd_binary(std::int64_t u, std::int64_t v){
     if(u && v){
         std::int64_t shifts = 0;
         while(!(u & 1u) && !(v & 1u)){
@@ -42,6 +42,11 @@ std::int64_t gcd_binary(std::int64_t u, std::int64_t v){
     }else{
         return u + v;
     }
+}
+
+template<class Signature>
+inline std::int64_t lcm(std::int64_t u, std::int64_t v){
+    return (u / gcd_binary(u, v)) * v;
 }
 
 template<bool ImplicitExponentialNumerator = true>

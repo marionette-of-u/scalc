@@ -634,6 +634,7 @@ int main(
     int argc, char *argv[]
 #endif
 ){
+#ifdef _DEBUG
     using namespace algebraic_impl;
     algebraic::test();
     //algebraic *p = algebraic::constant(2), *q = algebraic::constant(3);
@@ -649,6 +650,7 @@ int main(
 
     //algebraic::dispose(p);
     return 0;
+#endif
 
     try{
 #ifdef _DEBUG

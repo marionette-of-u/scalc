@@ -1,4 +1,5 @@
-﻿#include <algorithm>
+﻿#include <vector>
+#include <algorithm>
 #include <utility>
 #include <functional>
 #include <cmath>
@@ -25,7 +26,7 @@ private:
     int_multiply_iterator &operator =(const algebraic::value_type::value_type &v);
     int_multiply_iterator &operator =(algebraic::value_type::value_type &&v);
 };
-    
+
 class nth_root_multiply_iterator : public std::insert_iterator<algebraic::value_type>{
 public:
     typedef std::insert_iterator<algebraic::value_type> parent_type;
@@ -48,14 +49,28 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
     const std::int64_t target = x;
     std::int64_t t = 0, u;
     bool f = true;
-    while(x >= 2 && (x & 1) == 0){ ++t, x >>= 1; }
+    // 最小の素数は処理できないので単体で処理しておく
+    if(x == 2){
+        root_iter = std::make_pair(p, 2);
+        return;
+    }
+    // 最小の素数を除去
+    while(x >= 2 && (x & 1) == 0){ ++t, x /= 2; }
     if(t > 1){
         f = false;
         in_int_iter = static_cast<std::int64_t>(std::powl(long double(2), long double(t * p.numerator() / p.denominator())));
         u = (t * p.numerator()) % p.denominator();
         if(u > 0){
-            root_iter = std::make_pair(rational(u, p.denominator()), 2);
+            rational a(u, p.denominator());
+            a.normalize();
+            root_iter = std::make_pair(a, 2);
         }
+    }
+    // 最小の奇素数は処理できないので単体で処理しておく
+    if(x == 3){
+        if(t == 1){ x *= 2; }
+        root_iter = std::make_pair(p, x);
+        return;
     }
     std::int64_t d = 3, q = x / d;
     t = 0;
@@ -69,7 +84,9 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
                 in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(t * p.numerator() / p.denominator())));
                 u = (t * p.numerator()) % p.denominator();
                 if(u > 0){
-                    root_iter = std::make_pair(rational(u, p.denominator()), d);
+                    rational a(u, p.denominator());
+                    a.normalize();
+                    root_iter = std::make_pair(a, d);
                 }
             }
             d += 2;
@@ -82,14 +99,17 @@ void normalize_nth_root(algebraic::value_type &value, std::int64_t x, const rati
         f = false;
         u = (t * p.numerator()) % p.denominator();
         if(u > 0){
-            root_iter = std::make_pair(rational(u, p.denominator()), x);
+            rational a(u, p.denominator());
+            a.normalize();
+            root_iter = std::make_pair(a, x);
         }
         u = (t * p.numerator()) / p.denominator();
         if(u > 0){
-            in_int_iter = static_cast<std::int64_t>(std::powl(long double(x), long double(u)));
+            in_int_iter = static_cast<std::int64_t>(std::powl(long double(d), long double(u)));
         }
     }
-    if(f){ root_iter = std::make_pair(p, target); }
+    // 入力が既に素数だった場合
+    if(f){ root_iter = std::make_pair(p, x); }
 }
 
 // lexicographical_compare (int ver.)
@@ -117,29 +137,100 @@ void algebraic::test(){
             p1 = r, p = p1->next, z = x;
             while(z = z->next){
                 if(!q){ q = new_node(); }
-                q->value.insert(std::make_pair(0, 1));
-                {
-                    auto iter = y->value.begin(); ++iter;
-                    for(; iter != y->value.end(); ++iter){
-                        auto jter = z->value.find(iter->first);
-                        if(jter == z->value.end()){ continue; }
-                        explicit_exponential_rational r = iter->second * jter->second;
-                        normalize_nth_root(q->value, r.numerator(), iter->first);
+                std::function<void(std::vector<value_type>&, value_type, value_type)> rec;
+                rec = [&rec](std::vector<value_type> &fq_vec, value_type fy, value_type fz) -> void{
+                    if(!fy.empty() && !fz.empty()){
+                        auto iter = fy.begin();
+                        for(; iter != fy.end(); ++iter){
+                            for(auto jter = fz.begin(); jter != fz.end(); ){
+                                const rational &ye = iter->first;
+                                const explicit_exponential_rational &yc = iter->second;
+                                const rational &ze = jter->first;
+                                const explicit_exponential_rational &zc = jter->second;
+                                if(ye == ze){
+                                    value_type fq;
+                                    explicit_exponential_rational fc = yc * zc;
+                                    normalize_nth_root(fq, fc.numerator(), ye);
+                                    for(auto kter = fq.begin(); !fq.empty() && kter != fq.end(); ){
+                                        explicit_exponential_rational fc_prime(kter->second.numerator(), fc.denominator());
+                                        fc_prime.normalize();
+                                        if(kter->first.numerator() == 0 && fc_prime.numerator() == 1 && fc_prime.denominator() == 1){
+                                            kter = fq.erase(kter);
+                                        }else{
+                                            kter->second = fc_prime;
+                                            ++kter;
+                                        }
+                                    }
+                                    iter = fy.erase(iter);
+                                    jter = fz.erase(jter);
+                                    fq_vec.push_back(std::move(fq));
+                                    if(fy.empty() || fz.empty()){
+                                        break;
+                                    }else{
+                                        continue;
+                                    }
+                                }else if(ye.denominator() == ze.denominator() && yc == zc){
+                                    value_type fq;
+                                    rational fe(ye.numerator() + ze.numerator(), ye.denominator());
+                                    fe.normalize();
+                                    if(fe == 1){ fe = 0; }
+                                    normalize_nth_root(fq, yc.numerator(), fe);
+                                    iter = fy.erase(iter);
+                                    jter = fz.erase(jter);
+                                    fq_vec.push_back(std::move(fq));
+                                    if(fy.empty() || fz.empty()){
+                                        break;
+                                    }else{
+                                        continue;
+                                    }
+                                }else if(fy.size() == 1 && fz.size() == 1){
+                                    value_type fq;
+                                    fq.insert(std::move(*fy.begin()));
+                                    fq.insert(std::move(*fz.begin()));
+                                    iter = fy.erase(iter);
+                                    jter = fz.erase(jter);
+                                    fq_vec.push_back(std::move(fq));
+                                    if(fy.empty() || fz.empty()){
+                                        break;
+                                    }else{
+                                        continue;
+                                    }
+                                }
+                                ++jter;
+                            }
+                            if(fy.empty() || fz.empty()){ break; }
+                        }
                     }
-                }
-                const algebraic *a[2][2] = { { y, z }, { z, y } };
-                for(int i = 0; i < 2; ++i){
-                    auto iter = a[i][0]->value.begin(); ++iter;
-                    for(; iter != a[i][0]->value.end(); ++iter){
-                        auto jter = a[i][1]->value.find(iter->first);
-                        if(jter != a[i][1]->value.end()){ continue; }
-                        q->value.insert(*iter);
+                    if(!fy.empty()){
+                        for(auto iter = fy.begin(); iter != fy.end(); ++iter){
+                            value_type fq;
+                            fq.insert(std::move(*iter));
+                            fq_vec.push_back(std::move(fq));
+                        }
                     }
-                }
+                    if(!fz.empty()){
+                        for(auto iter = fz.begin(); iter != fz.end(); ++iter){
+                            value_type fq;
+                            fq.insert(std::move(*iter));
+                            fq_vec.push_back(std::move(fq));
+                        }
+                    }
+                    if(fq_vec.size() > 1){
+                        value_type ay = std::move(fq_vec.back());
+                        fq_vec.pop_back();
+                        value_type az = std::move(fq_vec.back());
+                        fq_vec.pop_back();
+                        rec(fq_vec, std::move(ay), std::move(az));
+                    }
+                };
+                std::vector<value_type> factor;
+                rec(factor, std::move(y->value), std::move(z->value));
+                q->value = std::move(factor.back());
                 int compare_result = 0;
+                if(!p){ p = r; }
                 while(p){
-                    auto iter = p->value.begin(); ++iter;
-                    auto jter = q->value.begin(); ++jter;
+                    auto iter = p->value.begin();
+                    auto jter = q->value.begin();
                     compare_result = int_lexicographical_compare(iter, p->value.end(), jter, q->value.end());
                     if(compare_result <= 0){ break; }
                     p1 = p, p = p->next;
@@ -163,29 +254,30 @@ void algebraic::test(){
         return r;
     };
 
-    algebraic *a = constant(3, rational(1, 2));
-    add(a, constant(4, rational(1, 4)));
+    // ----
+    //algebraic *a = constant(12, rational(1, 3));
+    //algebraic *b = constant(12, rational(1, 4));
+    //algebraic *c = constant(144, rational(1, 4));
+    //algebraic *d = constant(4, rational(1, 4));
+    //algebraic *e = constant(9, rational(1, 2));
 
-    algebraic *p = constant(5, rational(3, 5));
-    add(p, constant(3, rational(1, 2)));
-    algebraic *r = linked_multiply(a, p);
+    // ----
+    //algebraic *a = constant(3, rational(1, 2));
+    //add(a, constant(4, rational(1, 4)));
+    //algebraic *p = constant(5, rational(3, 5));
+    //add(p, constant(3, rational(1, 2)));
+    //algebraic *r = linked_multiply(a, p);
 
-    //algebraic *p, *q, *r, *a, *b, *c, *d;
-
-    //p = constant(explicit_exponential_rational(3, 1), rational(1, 3));
-    //q = constant(explicit_exponential_rational(3, 1), rational(1, 3));
-    //r = linked_multiply(p, q);
-    //q = constant(explicit_exponential_rational(2, 1), rational(1, 2));
-    //a = linked_multiply(r, q);
-
-    //p = constant(explicit_exponential_rational(3, 1), rational(1, 3));
-    //q = constant(explicit_exponential_rational(2, 1), rational(1, 2));
-    //b = linked_multiply(p, q);
-
-    //add(a, b);
-    //c = copy(a);
-
-    //d = linked_multiply(a, c);
+    // ----
+    algebraic *p, *q, *a, *b, *c;
+    p = constant(3, rational(2, 3));
+    q = constant(2, rational(1, 2));
+    a = linked_multiply(p, q);
+    p = constant(3, rational(1, 3));
+    q = constant(2, rational(1, 2));
+    b = linked_multiply(p, q);
+    add(a, b);
+    c = linked_multiply(a, a);
 }
 
 algebraic *algebraic::multiply(const algebraic *x, const algebraic *y){
@@ -208,7 +300,7 @@ void algebraic::add(algebraic *p, algebraic *q){
         while(p){
             auto iter = p->value.begin(), jter = q->value.begin();
             ++iter, ++jter;
-            compare_result = int_lexicographical_compare(iter, p->value.end(), jter, q->value.end());
+            compare_result = int_lexicographical_compare(jter, q->value.end(), iter, p->value.end());
             if(compare_result <= 0){ break; }
             p1 = p, p = p->next;
         }
@@ -255,7 +347,12 @@ algebraic *algebraic::constant(explicit_exponential_rational n, const rational &
             q->value.insert(std::make_pair(0, n < 0 ? -1 : +1));
             if(n < 0){ n = -n; }
         }
-        q->value.insert(std::make_pair(e, n));
+        normalize_nth_root(q->value, n.numerator(), e);
+        for(auto iter = q->value.begin(); iter != q->value.end(); ++iter){
+            explicit_exponential_rational a(iter->second.numerator(), n.denominator());
+            a.normalize();
+            iter->second = a;
+        }
         p->next = q;
     }
     return p;
